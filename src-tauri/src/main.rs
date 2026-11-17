@@ -5,6 +5,7 @@ mod config;
 mod hooks;
 mod notify;
 mod tray;
+mod update;
 
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -39,6 +40,7 @@ fn main() {
 
     tauri::Builder::default()
         // Desligado por padrão: só registra quando o usuário marca na bandeja
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -50,7 +52,8 @@ fn main() {
             claude_disconnect,
             muted_get,
             muted_set,
-            scale_get
+            scale_get,
+            update::update_install
         ])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
@@ -60,6 +63,7 @@ fn main() {
             }
             repair_claude_hooks(app.handle());
             tray::build(app.handle())?;
+            update::start(app.handle());
             let handle = app.handle().clone();
             thread::spawn(move || run_server(handle));
             Ok(())

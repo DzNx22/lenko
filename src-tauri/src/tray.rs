@@ -9,7 +9,7 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, Tray
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_autostart::ManagerExt;
 
-use crate::{config, hooks};
+use crate::{config, hooks, update};
 
 /// Itens que mudam de texto ou de marcação depois de criados.
 struct Items {
@@ -63,6 +63,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             &size_menu,
             &items.claude,
             &items.autostart,
+            &MenuItem::with_id(app, "update", "Procurar atualizações", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -105,6 +106,7 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
         }
         "claude" => toggle_claude(app),
         "autostart" => toggle_autostart(app),
+        "update" => check_update(app),
         "quit" => app.exit(0),
         id => {
             let Some(scale) = id.strip_prefix("size-").and_then(|s| s.parse().ok()) else { return };
@@ -140,6 +142,20 @@ fn toggle_claude(app: &AppHandle) {
         Err(text) => Notice { ok: false, text },
     };
     let _ = app.emit("notice", notice);
+}
+
+/// Procura na hora. Se houver versão nova, o balão de atualização aparece pelo
+/// evento `update-available`; senão, a preguiça diz que está tudo em dia.
+fn check_update(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let notice = match update::check(&app).await {
+            Ok(Some(_)) => return,
+            Ok(None) => Notice { ok: true, text: "Já estou na versão mais nova.".into() },
+            Err(e) => Notice { ok: false, text: format!("Não consegui procurar atualizações: {e}") },
+        };
+        let _ = app.emit("notice", notice);
+    });
 }
 
 fn toggle_autostart(app: &AppHandle) {

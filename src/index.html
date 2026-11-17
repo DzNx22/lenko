@@ -302,39 +302,74 @@ function onEvent(ev) {
 // No navegador (sem Tauri) os botões só simulam a resposta
 const invoke = (cmd, args) => tauri ? tauri.core.invoke(cmd, args) : Promise.resolve();
 
-function askToConnect() {
+// Balão com dois botões. Enquanto está aberto, eventos da IA não o atropelam.
+function ask(question, yesLabel, noLabel, onYes, onNo) {
   const text = document.createDocumentFragment();
-  text.append('Quer que eu me conecte ao Claude Code?');
+  text.append(question);
   const actions = document.createElement('div');
   actions.className = 'actions';
-  const yes = Object.assign(document.createElement('button'), { className: 'primary', textContent: 'Conectar' });
-  const no = Object.assign(document.createElement('button'), { textContent: 'Agora não' });
+  const yes = Object.assign(document.createElement('button'), { className: 'primary', textContent: yesLabel });
+  const no = Object.assign(document.createElement('button'), { textContent: noLabel });
   actions.append(yes, no);
   text.append(actions);
   setState('asking', text);
-
-  yes.addEventListener('click', async () => {
-    try {
-      await invoke('claude_connect');
-      setState('done', 'Conectado! Reinicie o Claude Code para valer.');
-      chirp(SOUND.done);
-    } catch (err) {
-      setState('waiting', String(err), '', true);
-      chirp(SOUND.waiting);
-    }
-  });
-  no.addEventListener('click', async () => {
-    try { await invoke('claude_decline'); } catch {}
-    setState('idle');
-  });
+  yes.addEventListener('click', onYes);
+  no.addEventListener('click', onNo);
   yes.focus();
+}
+
+function fail(err) {
+  setState('waiting', String(err), '', true);
+  chirp(SOUND.waiting);
+}
+
+function askToConnect() {
+  ask('Quer que eu me conecte ao Claude Code?', 'Conectar', 'Agora não',
+    async () => {
+      try {
+        await invoke('claude_connect');
+        setState('done', 'Conectado! Reinicie o Claude Code para valer.');
+        chirp(SOUND.done);
+      } catch (err) { fail(err); }
+    },
+    async () => {
+      try { await invoke('claude_decline'); } catch {}
+      rest();
+    });
+}
+
+/* ===================== ATUALIZAÇÃO ===================== */
+// Só pergunta quando a preguiça está à toa; senão guarda para depois do próximo descanso.
+let pendingUpdate = null;
+
+function offerUpdate(version) {
+  pendingUpdate = version;
+  if (state === 'idle') askToUpdate();
+}
+
+function askToUpdate() {
+  const version = pendingUpdate;
+  pendingUpdate = null;
+  ask(`Tenho uma atualização! (v${version})`, 'Atualizar', 'Depois',
+    async () => {
+      setState('working', 'Baixando a atualização…');
+      try { await invoke('update_install'); } // reinicia o app se der certo
+      catch (err) { fail(err); }
+    },
+    () => setState('idle'));
+}
+
+// Volta a descansar e, se uma atualização ficou esperando, pergunta agora.
+function rest() {
+  setState('idle');
+  if (pendingUpdate) askToUpdate();
 }
 
 /* ===================== INTERAÇÃO ===================== */
 const dismiss = () => {
   if (state === 'asking') return; // só sai pelos botões
   if (state === 'done') seenDone = true;
-  setState('idle');
+  rest();
 };
 $('bubble').addEventListener('click', dismiss);
 $('sloth').addEventListener('click', dismiss);
@@ -361,6 +396,7 @@ if (tauri) {
   tauri.event.listen('muted', e => setMuted(e.payload));
   invoke('muted_get').then(setMuted).catch(() => {});
   tauri.event.listen('scale', e => setScale(e.payload));
+  tauri.event.listen('update-available', e => offerUpdate(e.payload));
   invoke('scale_get').then(setScale).catch(() => {});
   tauri.core.invoke('claude_should_ask').then(ask => ask && askToConnect());
   $('quit').addEventListener('click', () => tauri.window.getCurrentWindow().close());
@@ -374,6 +410,7 @@ if (tauri) {
     '3': () => onEvent({ type: 'done', project: 'meu-projeto' }),
     '4': () => onEvent({ type: 'waiting', project: 'meu-projeto', message: 'Posso rodar npm install?' }),
     '5': () => askToConnect(),
+    '6': () => offerUpdate('9.9.9'),
   })[e.key]?.());
 }
 

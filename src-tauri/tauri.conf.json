@@ -36,6 +36,18 @@
       "icons/icon.png",
       "icons/icon.ico",
       "icons/icon.icns"
-    ]
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkyREY4ODc5RkMzMkQ5NDkKUldSSjJUTDhlWWpma2owZjVkMHFua0Q3UkZDdjFFcEhGUG1xak9VY2RteVBOUlZMdHRHNkN4Y28K",
+      "endpoints": [
+        "https://github.com/DzNx22/lenko/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }
