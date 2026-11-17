@@ -76,7 +76,7 @@ Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero termina
   - UX: verificar ao abrir e a cada poucas horas; a preguiça mostra o balão "Tenho uma atualização!" e só instala com o clique do usuário.
 - [ ] Assinatura de código: deixar o workflow pronto para receber o certificado do Windows via secrets quando o autor tiver um, sem quebrar o build enquanto não houver.
 - [ ] Validar o workflow `.github/workflows/release.yml`: criar a tag `v0.1.0` e conferir os instaladores e o `latest.json` na página de Releases. Testar a atualização instalando a v0.1.0 e lançando uma v0.1.1.
-- [ ] Atualizar o README: seção "Instalar" vira "baixe aqui"; a parte de desenvolvimento vai para `CONTRIBUTING.md`.
+- [x] Atualizar o README: seção "Instalar" vira "baixe aqui"; a parte de desenvolvimento vai para `CONTRIBUTING.md`.
 
 ### Fase 2 — Sistema de skins (fundação da loja)
 Princípio: depois desta fase, **personagens novos nunca exigem atualizar o app**. Funcionalidades (adaptadores, telas) chegam pelo updater; personagens chegam como pacotes baixados.
