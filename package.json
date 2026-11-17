@@ -1,0 +1,19 @@
+{
+  "name": "preguica",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mascote de desktop que avisa quando a IA de código termina",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "hooks:install": "node scripts/install-hooks.js",
+    "hooks:uninstall": "node scripts/install-hooks.js --uninstall",
+    "test:working": "node scripts/notify.js working",
+    "test:done": "node scripts/notify.js done",
+    "test:waiting": "node scripts/notify.js waiting"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

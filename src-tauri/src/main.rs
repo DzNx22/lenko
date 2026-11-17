@@ -1,0 +1,84 @@
+// Esconde o console no Windows em builds de release
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use serde::{Deserialize, Serialize};
+use std::io::Read;
+use std::thread;
+use tauri::{Emitter, Manager, PhysicalPosition};
+
+/// Porta local onde os adaptadores (hooks) mandam eventos.
+const ADDR: &str = "127.0.0.1:7777";
+
+/// Contrato de evento. Qualquer ferramenta de IA que mande este JSON
+/// via POST /event faz a preguiça reagir.
+#[derive(Clone, Serialize, Deserialize, Debug)]
+struct AiEvent {
+    /// "claude-code", "codex", etc.
+    tool: Option<String>,
+    /// "working" | "done" | "waiting"
+    #[serde(rename = "type")]
+    kind: String,
+    /// Nome do projeto/pasta
+    project: Option<String>,
+    /// Texto livre opcional (ex.: mensagem de permissão)
+    message: Option<String>,
+}
+
+fn main() {
+    tauri::Builder::default()
+        .setup(|app| {
+            if let Some(win) = app.get_webview_window("main") {
+                position_bottom_right(&win);
+            }
+            let handle = app.handle().clone();
+            thread::spawn(move || run_server(handle));
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("erro ao iniciar a Preguiça");
+}
+
+/// Coloca a janela no canto inferior direito do monitor atual.
+fn position_bottom_right(win: &tauri::WebviewWindow) {
+    let (Ok(Some(monitor)), Ok(size)) = (win.current_monitor(), win.outer_size()) else {
+        return;
+    };
+    let scale = monitor.scale_factor();
+    let area = monitor.size();
+    let origin = monitor.position();
+    let margin_x = (16.0 * scale) as i32;
+    let margin_y = (56.0 * scale) as i32; // folga para a barra de tarefas
+    let x = origin.x + area.width as i32 - size.width as i32 - margin_x;
+    let y = origin.y + area.height as i32 - size.height as i32 - margin_y;
+    let _ = win.set_position(PhysicalPosition::new(x, y));
+}
+
+/// Servidor HTTP mínimo: só escuta em localhost.
+fn run_server(handle: tauri::AppHandle) {
+    let server = match tiny_http::Server::http(ADDR) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Não consegui abrir {ADDR}: {e}. Já tem outra Preguiça aberta?");
+            return;
+        }
+    };
+
+    for mut req in server.incoming_requests() {
+        let mut body = String::new();
+        let _ = req.as_reader().take(64 * 1024).read_to_string(&mut body);
+
+        let (code, text) = match (req.method(), req.url()) {
+            (tiny_http::Method::Post, "/event") => match serde_json::from_str::<AiEvent>(&body) {
+                Ok(ev) => {
+                    let _ = handle.emit("ai-event", ev);
+                    (200, "ok")
+                }
+                Err(_) => (400, "JSON inválido: envie {\"type\": \"done\"}"),
+            },
+            (tiny_http::Method::Get, "/health") => (200, "preguiça acordada"),
+            _ => (404, "rota não encontrada"),
+        };
+
+        let _ = req.respond(tiny_http::Response::from_string(text).with_status_code(code));
+    }
+}

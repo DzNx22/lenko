@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Preguiça</title>
+<style>
+  :root {
+    --outline: #3B2A1E;
+    --paper: #FDFBF4;
+    --ink: #2A1D14;
+    --alert: #C8553D;
+    --leaf: #6E9E4F;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body {
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    font: 700 12px/1.35 "Courier New", ui-monospace, monospace;
+    color: var(--ink);
+    -webkit-font-smoothing: none;
+  }
+  #stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding-bottom: 8px;
+  }
+
+  /* ---------- balão de fala com cantos em degrau ---------- */
+  #bubble {
+    position: relative;
+    max-width: 210px;
+    margin-bottom: 14px;
+    padding: 8px 10px;
+    background: var(--paper);
+    box-shadow:
+      0 -3px 0 0 var(--outline), 0 3px 0 0 var(--outline),
+      -3px 0 0 0 var(--outline), 3px 0 0 0 var(--outline);
+    cursor: pointer;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity .15s steps(3), transform .15s steps(3);
+    pointer-events: none;
+  }
+  #bubble.show { opacity: 1; transform: none; pointer-events: auto; }
+  #bubble::after { /* rabinho em pixel */
+    content: ""; position: absolute; left: 50%; bottom: -6px;
+    width: 6px; height: 6px; margin-left: -3px;
+    background: var(--paper);
+    box-shadow: -3px 0 0 0 var(--outline), 3px 0 0 0 var(--outline), 0 3px 0 0 var(--outline);
+  }
+  #bubble .project { display: block; font-weight: 400; opacity: .7; margin-top: 2px; word-break: break-all; }
+  #bubble.alert { box-shadow:
+      0 -3px 0 0 var(--alert), 0 3px 0 0 var(--alert),
+      -3px 0 0 0 var(--alert), 3px 0 0 0 var(--alert); }
+  #bubble.alert::after { box-shadow:
+      -3px 0 0 0 var(--alert), 3px 0 0 0 var(--alert), 0 3px 0 0 var(--alert); }
+
+  /* ---------- galho (arrasta a janela) e preguiça ---------- */
+  #rig { position: relative; display: flex; flex-direction: column; align-items: center; }
+  canvas { display: block; image-rendering: pixelated; }
+  #branch { cursor: grab; }
+  #sloth { transform-origin: 50% 0; cursor: pointer; }
+
+  #zzz {
+    position: absolute; right: -6px; top: 28px;
+    color: var(--outline); font-size: 14px; letter-spacing: 2px;
+    opacity: 0;
+  }
+
+  /* ---------- controles que aparecem no hover ---------- */
+  #controls {
+    position: absolute; top: 4px; right: 4px; display: flex; gap: 4px;
+    opacity: 0; transition: opacity .1s;
+  }
+  body:hover #controls { opacity: 1; }
+  #controls button {
+    width: 22px; height: 22px; border: 0; padding: 0;
+    background: var(--paper); color: var(--ink);
+    box-shadow: 0 0 0 2px var(--outline);
+    font: inherit; font-size: 12px; cursor: pointer;
+  }
+  #controls button:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+
+  /* ---------- estados ---------- */
+  .idle #sloth    { animation: sway 6s ease-in-out infinite; }
+  .idle #zzz      { animation: zzz 3s steps(6) infinite; }
+  .working #sloth { animation: sway 2.4s ease-in-out infinite; }
+  .done #sloth    { animation: hop .5s steps(4) 3; }
+  .waiting #sloth { animation: wiggle .25s steps(2) infinite; }
+
+  @keyframes sway   { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  @keyframes hop    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes wiggle { 0% { transform: rotate(-4deg); } 100% { transform: rotate(4deg); } }
+  @keyframes zzz    { 0% { opacity: 0; transform: translate(0,0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(8px,-18px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    #sloth, #zzz { animation: none !important; }
+    .idle #zzz { opacity: 1; }
+  }
+</style>
+</head>
+<body class="idle">
+  <div id="controls">
+    <button id="mute" title="Silenciar sons" aria-label="Silenciar sons">♪</button>
+    <button id="quit" title="Fechar a Preguiça" aria-label="Fechar a Preguiça">×</button>
+  </div>
+
+  <div id="stage">
+    <div id="bubble" role="status" aria-live="polite"></div>
+    <div id="rig">
+      <canvas id="branch" data-tauri-drag-region title="Arraste o galho para mover"></canvas>
+      <canvas id="sloth" title="Clique para dispensar"></canvas>
+      <span id="zzz">z z</span>
+    </div>
+  </div>
+
+<script>
+/* ===================== SPRITE 32 colunas ===================== */
+const SCALE = 5;
+const PAL = {
+  O:'#3B2A1E', B:'#8A6F55', L:'#E6D3A8', E:'#4A3426', W:'#FFFFFF',
+  N:'#2A1D14', M:'#5A3A28', C:'#F2E6C9', T:'#6B4A2E', t:'#4F341F', g:'#6E9E4F'
+};
+const BRANCH = [
+  "................................",
+  "....gg.........g.........gg.....",
+  "TTTTTTTCCCTTTTTTTTTTTTCCCTTTTTTT",
+  "tttttttCCCttttttttttttCCCttttttt",
+];
+const face = mid => ".......OBB" + mid + "BBO.......";
+const EYES = {
+  open:   [face("LLEEELLEEELL"), face("LEEWELLEWEEL")],
+  closed: [face("LLEEELLEEELL"), face("LEEEELLEEEEL")],
+};
+const MOUTH = {
+  smile: [face("LLLLMLLMLLLL"), face("LLLLLMMLLLLL")],
+  open:  [face("LLLLLMMLLLLL"), face("LLLLLMMLLLLL")],
+  flat:  [face("LLLLLLLLLLLL"), face("LLLLMMMMLLLL")],
+};
+function body(eyes, mouth) {
+  return [
+    ".......OBBO..........OBBO.......",
+    ".......OBBO..........OBBO.......",
+    ".......OBBO.OOOOOOOO.OBBO.......",
+    ".......OBBOOBBBBBBBBOOBBO.......",
+    ".......OBBBBBLLLLLLBBBBBO.......",
+    ".......OBBBLLLLLLLLLLBBBO.......",
+    ...EYES[eyes],
+    face("LEELLLLLLEEL"),
+    face("LLLLLNNLLLLL"),
+    ...MOUTH[mouth],
+    ".......OBBBLLLLLLLLLLBBBO.......",
+    ".......OBBBBBLLLLLLBBBBBO.......",
+    "........OBBBBBBBBBBBBBBO........",
+    "........OBBBBBBBBBBBBBBO........",
+    "........OBBBBBBBBBBBBBBO........",
+    "........OBBBBBBBBBBBBBBO........",
+    ".........OBBBBBBBBBBBBO.........",
+    ".........OBBBBBBBBBBBBO.........",
+    "..........OBBO....OBBO..........",
+    "..........OBBO....OBBO..........",
+    "..........CCCO....OCCC..........",
+  ];
+}
+
+function paint(canvas, rows) {
+  canvas.width = rows[0].length * SCALE;
+  canvas.height = rows.length * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  rows.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c === '.') return;
+    ctx.fillStyle = PAL[c];
+    ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+  }));
+}
+
+const $ = id => document.getElementById(id);
+paint($('branch'), BRANCH);
+
+/* ===================== SOM 8-bit ===================== */
+let muted = false, audio;
+function chirp(notes) {
+  if (muted) return;
+  audio ??= new AudioContext();
+  let t = audio.currentTime;
+  for (const [freq, dur] of notes) {
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = 'square'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.06, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(t); osc.stop(t + dur);
+    t += dur * 0.9;
+  }
+}
+const SOUND = {
+  done:    [[523, .09], [659, .09], [784, .16]],
+  waiting: [[784, .12], [523, .12], [784, .12], [523, .12]],
+};
+
+/* ===================== ESTADOS ===================== */
+const LOOK = {
+  idle:    ['closed', 'flat'],
+  working: ['open',   'flat'],
+  done:    ['open',   'smile'],
+  waiting: ['open',   'open'],
+};
+let state = 'idle', blinkTimer, backToSleep;
+
+function setState(next, text, project, alert = false) {
+  state = next;
+  document.body.className = next;
+  clearTimeout(backToSleep);
+  paint($('sloth'), body(...LOOK[next]));
+
+  const bubble = $('bubble');
+  if (text) {
+    bubble.innerHTML = '';
+    bubble.append(text);
+    if (project) {
+      const p = document.createElement('span');
+      p.className = 'project'; p.textContent = project;
+      bubble.append(p);
+    }
+    bubble.classList.toggle('alert', alert);
+    bubble.classList.add('show');
+  } else {
+    bubble.classList.remove('show');
+  }
+  scheduleBlink();
+}
+
+// Piscadinha de vez em quando quando está acordada
+function scheduleBlink() {
+  clearTimeout(blinkTimer);
+  if (state === 'idle') return;
+  blinkTimer = setTimeout(() => {
+    paint($('sloth'), body('closed', LOOK[state][1]));
+    setTimeout(() => { paint($('sloth'), body(...LOOK[state])); scheduleBlink(); }, 140);
+  }, 2500 + Math.random() * 3000);
+}
+
+function onEvent(ev) {
+  const project = ev.project || '';
+  switch (ev.type) {
+    case 'working':
+      setState('working', '…', project);
+      break;
+    case 'done':
+      setState('done', 'Terminei!', project);
+      chirp(SOUND.done);
+      backToSleep = setTimeout(() => setState('idle'), 15000);
+      break;
+    case 'waiting':
+      setState('waiting', ev.message || 'Preciso de você aqui.', project, true);
+      chirp(SOUND.waiting);
+      break;
+  }
+}
+
+/* ===================== INTERAÇÃO ===================== */
+const dismiss = () => setState('idle');
+$('bubble').addEventListener('click', dismiss);
+$('sloth').addEventListener('click', dismiss);
+$('mute').addEventListener('click', () => {
+  muted = !muted;
+  $('mute').textContent = muted ? '–' : '♪';
+  $('mute').title = muted ? 'Ativar sons' : 'Silenciar sons';
+});
+
+const tauri = window.__TAURI__;
+if (tauri) {
+  tauri.event.listen('ai-event', e => onEvent(e.payload));
+  $('quit').addEventListener('click', () => tauri.window.getCurrentWindow().close());
+} else {
+  // Abrindo direto no navegador: teclas 1–4 simulam eventos
+  $('quit').hidden = true;
+  document.body.style.background = '#9DB4C0';
+  addEventListener('keydown', e => ({
+    '1': () => setState('idle'),
+    '2': () => onEvent({ type: 'working', project: 'meu-projeto' }),
+    '3': () => onEvent({ type: 'done', project: 'meu-projeto' }),
+    '4': () => onEvent({ type: 'waiting', project: 'meu-projeto', message: 'Posso rodar npm install?' }),
+  })[e.key]?.());
+}
+
+setState('idle');
+</script>
+</body>
+</html>
