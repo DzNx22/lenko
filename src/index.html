@@ -32,7 +32,7 @@
   /* ---------- balão de fala com cantos em degrau ---------- */
   #bubble {
     position: relative;
-    max-width: 210px;
+    max-width: min(210px, calc(100vw - 20px));
     margin-bottom: 14px;
     padding: 8px 10px;
     background: var(--paper);
@@ -128,7 +128,7 @@
 
 <script>
 /* ===================== SPRITE 32 colunas ===================== */
-const SCALE = 5;
+let SCALE = 5; // trocado pela bandeja (Tamanho)
 const PAL = {
   O:'#3B2A1E', B:'#8A6F55', L:'#E6D3A8', E:'#4A3426', W:'#FFFFFF',
   N:'#2A1D14', M:'#5A3A28', C:'#F2E6C9', T:'#6B4A2E', t:'#4F341F', g:'#6E9E4F'
@@ -189,6 +189,12 @@ function paint(canvas, rows) {
 
 const $ = id => document.getElementById(id);
 paint($('branch'), BRANCH);
+
+function setScale(value) {
+  SCALE = value;
+  paint($('branch'), BRANCH);
+  paint($('sloth'), body(...LOOK[state]));
+}
 
 /* ===================== SOM 8-bit ===================== */
 let muted = false, audio;
@@ -354,6 +360,8 @@ if (tauri) {
   tauri.event.listen('notice', e => onNotice(e.payload));
   tauri.event.listen('muted', e => setMuted(e.payload));
   invoke('muted_get').then(setMuted).catch(() => {});
+  tauri.event.listen('scale', e => setScale(e.payload));
+  invoke('scale_get').then(setScale).catch(() => {});
   tauri.core.invoke('claude_should_ask').then(ask => ask && askToConnect());
   $('quit').addEventListener('click', () => tauri.window.getCurrentWindow().close());
 } else {

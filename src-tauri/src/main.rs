@@ -44,10 +44,13 @@ fn main() {
             claude_decline,
             claude_disconnect,
             muted_get,
-            muted_set
+            muted_set,
+            scale_get
         ])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
+                let scale = config_dir(app.handle()).map_or(5, |dir| config::load(&dir).scale());
+                let _ = win.set_size(window_size(scale));
                 position_bottom_right(&win);
             }
             repair_claude_hooks(app.handle());
@@ -149,6 +152,39 @@ fn muted_get(app: tauri::AppHandle) -> bool {
 fn muted_set(app: tauri::AppHandle, muted: bool) -> Result<(), String> {
     tray::set_muted(&app, muted);
     save_muted(&app, muted)
+}
+
+// ---------------------------------------------------------------------------
+// Tamanho
+// ---------------------------------------------------------------------------
+
+/// Janela proporcional à escala do sprite, com folga para o balão (240×300 no Grande).
+fn window_size(scale: u8) -> tauri::LogicalSize<f64> {
+    let s = f64::from(scale);
+    tauri::LogicalSize::new(120.0 + 24.0 * s, 150.0 + 30.0 * s)
+}
+
+#[tauri::command]
+fn scale_get(app: tauri::AppHandle) -> u8 {
+    config_dir(&app).map_or(5, |dir| config::load(&dir).scale())
+}
+
+/// Troca o tamanho mantendo o canto inferior direito no lugar, salva e avisa a preguiça.
+fn set_scale(app: &tauri::AppHandle, scale: u8) -> Result<(), String> {
+    let win = app.get_webview_window("main").ok_or("janela não encontrada")?;
+    let (pos, old) = (win.outer_position().map_err(|e| e.to_string())?, win.outer_size().map_err(|e| e.to_string())?);
+    let new = window_size(scale).to_physical::<i32>(win.scale_factor().map_err(|e| e.to_string())?);
+    win.set_size(window_size(scale)).map_err(|e| e.to_string())?;
+    let _ = win.set_position(PhysicalPosition::new(
+        pos.x + old.width as i32 - new.width,
+        pos.y + old.height as i32 - new.height,
+    ));
+    let _ = app.emit("scale", scale);
+
+    let dir = config_dir(app)?;
+    let mut cfg = config::load(&dir);
+    cfg.scale = scale;
+    config::save(&dir, &cfg).map_err(|e| e.to_string())
 }
 
 /// Coloca a janela no canto inferior direito do monitor atual.

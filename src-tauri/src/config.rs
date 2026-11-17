@@ -11,7 +11,7 @@ pub enum ClaudeCode {
     Declined,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     /// Resposta ao "Quer que eu me conecte ao Claude Code?". `None` = ainda não perguntou.
@@ -20,6 +20,29 @@ pub struct Config {
     /// Sons desligados (bandeja ou botão ♪).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub muted: bool,
+    /// Pixels de tela por pixel do sprite (ver `SCALES`).
+    #[serde(default = "default_scale")]
+    pub scale: u8,
+}
+
+/// Tamanhos oferecidos na bandeja. Só escalas inteiras, para o pixel art não borrar.
+pub const SCALES: [(u8, &str); 3] = [(3, "Pequeno"), (4, "Médio"), (5, "Grande")];
+
+fn default_scale() -> u8 {
+    5
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config { claude_code: None, muted: false, scale: default_scale() }
+    }
+}
+
+impl Config {
+    /// Escala válida mesmo se o arquivo foi editado à mão.
+    pub fn scale(&self) -> u8 {
+        if SCALES.iter().any(|(s, _)| *s == self.scale) { self.scale } else { default_scale() }
+    }
 }
 
 fn file(dir: &Path) -> PathBuf {

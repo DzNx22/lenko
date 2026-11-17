@@ -4,7 +4,7 @@
 //! trazer a preguiça de volta depois de ocultá-la.
 
 use serde::Serialize;
-use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
@@ -15,6 +15,7 @@ struct Items {
     toggle: MenuItem<Wry>,
     mute: CheckMenuItem<Wry>,
     claude: MenuItem<Wry>,
+    sizes: Vec<(u8, CheckMenuItem<Wry>)>,
 }
 
 /// Aviso mostrado no balão depois de uma ação feita pela bandeja.
@@ -25,11 +26,23 @@ struct Notice {
 }
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    let muted = crate::config_dir(app).is_ok_and(|dir| config::load(&dir).muted);
+    let cfg = crate::config_dir(app).map(|dir| config::load(&dir)).unwrap_or_default();
+    let muted = cfg.muted;
+    let sizes = config::SCALES
+        .iter()
+        .map(|&(s, name)| {
+            CheckMenuItem::with_id(app, format!("size-{s}"), name, true, s == cfg.scale(), None::<&str>)
+                .map(|item| (s, item))
+        })
+        .collect::<tauri::Result<Vec<_>>>()?;
+    let size_refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
+        sizes.iter().map(|(_, item)| item as &dyn tauri::menu::IsMenuItem<Wry>).collect();
+    let size_menu = Submenu::with_items(app, "Tamanho", true, &size_refs)?;
     let items = Items {
         toggle: MenuItem::with_id(app, "toggle", "Ocultar", true, None::<&str>)?,
         mute: CheckMenuItem::with_id(app, "mute", "Silenciar sons", true, muted, None::<&str>)?,
         claude: MenuItem::with_id(app, "claude", claude_label(app), true, None::<&str>)?,
+        sizes,
     };
     let quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
     let menu = Menu::with_items(
@@ -37,6 +50,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         &[
             &items.toggle,
             &items.mute,
+            &size_menu,
             &items.claude,
             &PredefinedMenuItem::separator(app)?,
             &quit,
@@ -80,7 +94,16 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
         }
         "claude" => toggle_claude(app),
         "quit" => app.exit(0),
-        _ => {}
+        id => {
+            let Some(scale) = id.strip_prefix("size-").and_then(|s| s.parse().ok()) else { return };
+            // Funciona como opção única: só o tamanho escolhido fica marcado
+            for (s, item) in &app.state::<Items>().sizes {
+                let _ = item.set_checked(*s == scale);
+            }
+            if let Err(e) = crate::set_scale(app, scale) {
+                eprintln!("Não consegui mudar o tamanho: {e}");
+            }
+        }
     }
 }
 
