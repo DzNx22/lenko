@@ -1,6 +1,8 @@
 // Esconde o console no Windows em builds de release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod notify;
+
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 use std::thread;
@@ -25,6 +27,12 @@ struct AiEvent {
 }
 
 fn main() {
+    // Chamado por um hook: manda o evento e sai, sem abrir janela nem iniciar o Tauri
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(notify_args) = notify::parse_args(&args) {
+        notify::run(notify_args);
+    }
+
     tauri::Builder::default()
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
