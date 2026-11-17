@@ -40,6 +40,21 @@ LENKO é a identidade de um universo de personagens. A preguiça é a primeira e
 
 ![Os quatro estados](docs/estados.png)
 
+## Instalar
+
+1. Baixe o instalador do seu sistema na [página de Releases](https://github.com/DzNx22/lenko/releases/latest):
+   - **Windows:** `LENKO_x.y.z_x64-setup.exe`
+   - **macOS:** `.dmg` (`aarch64` para Apple Silicon, `x64` para Intel)
+   - **Linux:** `.AppImage` ou `.deb`
+2. Instale e abra. A preguiça aparece no canto inferior direito da tela.
+3. No balão "Quer que eu me conecte ao Claude Code?", clique em **Conectar** e reinicie o Claude Code.
+
+Pronto: sem terminal e sem Node. Para desconectar depois, use o menu da bandeja.
+
+> No Windows, enquanto o instalador não tiver assinatura digital, o SmartScreen pode mostrar "O Windows protegeu o computador". Clique em **Mais informações → Executar assim mesmo**.
+
+O LENKO se atualiza sozinho. Quando sai uma versão nova, a preguiça avisa no balão e só instala quando você clica em **Atualizar**. Também dá para procurar na hora pelo menu da bandeja.
+
 ## Como funciona
 
 ```mermaid
@@ -68,28 +83,6 @@ Content-Type: application/json
 
 `type` aceita `working`, `done` e `waiting`. O servidor escuta apenas em `127.0.0.1`.
 
-## Rodando localmente
-
-Pré-requisitos: [Rust](https://rustup.rs), Node.js 18+ e as [dependências do Tauri para o seu sistema](https://v2.tauri.app/start/prerequisites/).
-
-```bash
-npm install
-npm run dev              # a primeira compilação demora alguns minutos
-```
-
-Com o LENKO aberto, em outro terminal:
-
-```bash
-npm run hooks:install    # conecta ao Claude Code (faz backup do settings.json)
-npm run test:done        # ela deve pular e dizer "Terminei!"
-```
-
-Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
-
-Na primeira vez que abre, a preguiça também pergunta no balão se pode se conectar ao Claude Code. Clicar em **Conectar** faz o mesmo que o `hooks:install`, apontando para o próprio executável.
-
-> Para mexer só no visual, abra `src/index.html` no navegador e use as teclas **1–4** para simular os estados.
-
 ## Uso
 
 Na preguiça:
@@ -110,6 +103,7 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 | **Tamanho** | Pequeno, Médio ou Grande. Só escalas inteiras, para o pixel art continuar nítido. O canto inferior direito fica no lugar. |
 | **Conectar / Desconectar do Claude Code** | Adiciona ou remove os hooks do LENKO no `~/.claude/settings.json`, sem mexer nos hooks de outras ferramentas. Reinicie o Claude Code depois. |
 | **Iniciar com o sistema** | Abre o LENKO junto com o computador. Vem desligado. |
+| **Procurar atualizações** | Verifica na hora se há versão nova. A verificação automática já acontece ao abrir e a cada 6 horas. |
 | **Sair** | Fecha o LENKO. |
 
 ## Decisões técnicas
@@ -140,24 +134,7 @@ Este repositório é a versão aberta do LENKO, com a preguiça. Depois que tudo
 
 ## Contribuindo
 
-Contribuições são bem-vindas, principalmente adaptadores para outras ferramentas de IA e correções de bugs. Abra uma *issue* descrevendo a ideia antes de começar algo grande.
-
-## Estrutura
-
-```
-lenko/
-├── src/index.html              mascote: sprite, estados, balão e som
-├── src-tauri/src/main.rs       janela transparente + servidor local na porta 7777
-├── src-tauri/src/notify.rs     modo --notify: o próprio executável serve de adaptador
-├── src-tauri/src/hooks.rs      conecta e desconecta o Claude Code
-├── src-tauri/src/tray.rs       ícone e menu na bandeja do sistema
-├── src-tauri/src/config.rs     preferências salvas (conexão, som, tamanho)
-├── src-tauri/tauri.conf.json   nome, identificador e janela do app
-├── scripts/notify.js           adaptador genérico (hook → evento)
-├── scripts/install-hooks.js    conecta e desconecta o Claude Code
-├── docs/                       GIF e imagem dos estados usados no README
-└── .github/workflows/          build dos instaladores a cada versão
-```
+Contribuições são bem-vindas, principalmente adaptadores para outras ferramentas de IA e correções de bugs. Como rodar o projeto, testar e enviar mudanças está em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licença
 
