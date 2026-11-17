@@ -38,6 +38,11 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // Desligado por padrão: só registra quando o usuário marca na bandeja
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .invoke_handler(tauri::generate_handler![
             claude_should_ask,
             claude_connect,

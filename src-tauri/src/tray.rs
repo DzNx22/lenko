@@ -7,6 +7,7 @@ use serde::Serialize;
 use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, Wry};
+use tauri_plugin_autostart::ManagerExt;
 
 use crate::{config, hooks};
 
@@ -16,6 +17,7 @@ struct Items {
     mute: CheckMenuItem<Wry>,
     claude: MenuItem<Wry>,
     sizes: Vec<(u8, CheckMenuItem<Wry>)>,
+    autostart: CheckMenuItem<Wry>,
 }
 
 /// Aviso mostrado no balão depois de uma ação feita pela bandeja.
@@ -43,6 +45,14 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         mute: CheckMenuItem::with_id(app, "mute", "Silenciar sons", true, muted, None::<&str>)?,
         claude: MenuItem::with_id(app, "claude", claude_label(app), true, None::<&str>)?,
         sizes,
+        autostart: CheckMenuItem::with_id(
+            app,
+            "autostart",
+            "Iniciar com o sistema",
+            true,
+            app.autolaunch().is_enabled().unwrap_or(false),
+            None::<&str>,
+        )?,
     };
     let quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
     let menu = Menu::with_items(
@@ -52,6 +62,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             &items.mute,
             &size_menu,
             &items.claude,
+            &items.autostart,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -93,6 +104,7 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
             let _ = app.emit("muted", muted);
         }
         "claude" => toggle_claude(app),
+        "autostart" => toggle_autostart(app),
         "quit" => app.exit(0),
         id => {
             let Some(scale) = id.strip_prefix("size-").and_then(|s| s.parse().ok()) else { return };
@@ -128,6 +140,19 @@ fn toggle_claude(app: &AppHandle) {
         Err(text) => Notice { ok: false, text },
     };
     let _ = app.emit("notice", notice);
+}
+
+fn toggle_autostart(app: &AppHandle) {
+    let item = &app.state::<Items>().autostart;
+    // O item já trocou a própria marcação ao ser clicado
+    let enable = item.is_checked().unwrap_or(false);
+    let launcher = app.autolaunch();
+    let result = if enable { launcher.enable() } else { launcher.disable() };
+    if let Err(e) = result {
+        let _ = item.set_checked(!enable);
+        let text = format!("Não consegui mudar o início com o sistema: {e}");
+        let _ = app.emit("notice", Notice { ok: false, text });
+    }
 }
 
 /// Conectado = há entradas do LENKO no settings.json, mesmo que com caminho antigo.

@@ -109,6 +109,7 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 | **Silenciar sons** | Liga ou desliga os sons 8-bit. Fica sincronizado com o botão ♪ e é lembrado ao reabrir. |
 | **Tamanho** | Pequeno, Médio ou Grande. Só escalas inteiras, para o pixel art continuar nítido. O canto inferior direito fica no lugar. |
 | **Conectar / Desconectar do Claude Code** | Adiciona ou remove os hooks do LENKO no `~/.claude/settings.json`, sem mexer nos hooks de outras ferramentas. Reinicie o Claude Code depois. |
+| **Iniciar com o sistema** | Abre o LENKO junto com o computador. Vem desligado. |
 | **Sair** | Fecha o LENKO. |
 
 ## Decisões técnicas
@@ -128,8 +129,8 @@ Na extensão nativa do Claude Code para VS Code, o aviso de "Preciso de você" n
 - [x] Mascote com quatro estados, balão e som
 - [x] Servidor local de eventos e adaptador para o Claude Code
 - [x] Conexão com o Claude Code pelo próprio app, sem terminal
-- [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar e sair
-- [ ] Opção de iniciar com o sistema
+- [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar, iniciar com o sistema e sair
+- [x] Opção de iniciar com o sistema
 - [ ] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
 - [ ] Adaptadores para outras ferramentas de IA de código
 
