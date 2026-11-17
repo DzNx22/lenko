@@ -52,7 +52,9 @@ lenko/
 1. Atualize a versão em `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` e `package.json`.
 2. Faça o commit, crie a tag e envie: `git tag v0.1.1 && git push origin main --tags`.
 3. O workflow `release` gera os instaladores e um rascunho de Release com o `latest.json`.
-4. Revise o rascunho e clique em **Publish**. Só então os apps instalados enxergam a versão nova.
+4. Na página de Releases, abra o rascunho criado pelo workflow (marcado como **Draft**), edite o título e o texto se quiser e clique em **Publish release**. Só então os apps instalados enxergam a versão nova.
+
+   Não use **Draft a new release**: isso cria uma release vazia na mesma tag, sem os instaladores nem o `latest.json`, e o atualizador para de funcionar.
 
 Os secrets necessários estão descritos no topo de `.github/workflows/release.yml`.
 

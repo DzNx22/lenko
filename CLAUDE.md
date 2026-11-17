@@ -68,14 +68,14 @@ Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero termina
 - [x] Opção de desconectar (remove só as entradas `--preguica`).
 - [x] Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
 - [x] Iniciar com o sistema (`tauri-plugin-autostart`), desligado por padrão.
-- [ ] **Atualização automática (obrigatória antes do primeiro lançamento público).** Quem instalar uma versão sem updater fica preso nela para sempre.
+- [x] **Atualização automática (obrigatória antes do primeiro lançamento público).** Quem instalar uma versão sem updater fica preso nela para sempre.
   - Adicionar `tauri-plugin-updater` e `tauri-plugin-process` (para reiniciar após atualizar).
   - Gerar o par de chaves com `npx tauri signer generate`. A chave pública vai em `tauri.conf.json` (`plugins.updater.pubkey`); a privada e a senha vão como secrets do GitHub (`TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). **Nunca commitar a chave privada.** Avisar o autor para guardar uma cópia fora do computador: perder a chave impede atualizar os apps já instalados.
   - Ativar `bundle.createUpdaterArtifacts` e passar os secrets e `includeUpdaterJson: true` no `tauri-action` do workflow de release, para publicar o `latest.json` junto dos instaladores.
   - Endpoint: `https://github.com/<usuario>/lenko/releases/latest/download/latest.json`.
   - UX: verificar ao abrir e a cada poucas horas; a preguiça mostra o balão "Tenho uma atualização!" e só instala com o clique do usuário.
-- [ ] Assinatura de código: deixar o workflow pronto para receber o certificado do Windows via secrets quando o autor tiver um, sem quebrar o build enquanto não houver.
-- [ ] Validar o workflow `.github/workflows/release.yml`: criar a tag `v0.1.0` e conferir os instaladores e o `latest.json` na página de Releases. Testar a atualização instalando a v0.1.0 e lançando uma v0.1.1.
+- [x] Assinatura de código: deixar o workflow pronto para receber o certificado do Windows via secrets quando o autor tiver um, sem quebrar o build enquanto não houver.
+- [x] Validar o workflow `.github/workflows/release.yml`: criar a tag `v0.1.0` e conferir os instaladores e o `latest.json` na página de Releases. Testar a atualização instalando a v0.1.0 e lançando uma v0.1.1.
 - [x] Atualizar o README: seção "Instalar" vira "baixe aqui"; a parte de desenvolvimento vai para `CONTRIBUTING.md`.
 - [ ] Página de download no GitHub Pages: detecta o sistema do visitante e oferece o instalador certo, em vez da lista de assets da Release.
 

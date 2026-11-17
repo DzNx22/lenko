@@ -125,7 +125,7 @@ Na extensão nativa do Claude Code para VS Code, o aviso de "Preciso de você" n
 - [x] Conexão com o Claude Code pelo próprio app, sem terminal
 - [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar, iniciar com o sistema e sair
 - [x] Opção de iniciar com o sistema
-- [ ] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
+- [x] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
 - [ ] Adaptadores para outras ferramentas de IA de código
 
 ## LENKO Pro
