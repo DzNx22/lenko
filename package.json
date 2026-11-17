@@ -1,6 +1,6 @@
 {
   "name": "lenko",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Mascote de desktop que avisa quando a IA de código termina",
   "scripts": {
