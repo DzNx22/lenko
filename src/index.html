@@ -209,12 +209,29 @@ const LOOK = {
   done:    ['open',   'smile'],
   waiting: ['open',   'open'],
 };
-let state = 'idle', blinkTimer, backToSleep;
+let state = 'idle', blinkTimer, nudgeTimer;
+let seenDone = false; // o dev já dispensou o "Terminei!" desta tarefa
+
+// Enquanto ninguém responde, a preguiça volta a chamar atenção (som + pulinho).
+// Os intervalos vão espaçando para não virar um alarme; depois do último ela só fica esperando.
+const NUDGE_DELAYS = [30, 60, 120, 300, 600].map(s => s * 1000);
+
+function nudge(kind, step = 0) {
+  clearTimeout(nudgeTimer);
+  chirp(SOUND[kind]);
+  const sloth = $('sloth');
+  sloth.style.animation = 'none';
+  void sloth.offsetWidth; // reinicia a animação do estado
+  sloth.style.animation = '';
+  if (step < NUDGE_DELAYS.length) {
+    nudgeTimer = setTimeout(() => nudge(kind, step + 1), NUDGE_DELAYS[step]);
+  }
+}
 
 function setState(next, text, project, alert = false) {
   state = next;
   document.body.className = next;
-  clearTimeout(backToSleep);
+  clearTimeout(nudgeTimer);
   paint($('sloth'), body(...LOOK[next]));
 
   const bubble = $('bubble');
@@ -248,22 +265,27 @@ function onEvent(ev) {
   const project = ev.project || '';
   switch (ev.type) {
     case 'working':
+      seenDone = false;
       setState('working', '…', project);
       break;
     case 'done':
+      // Repetido (ex.: lembrete de ociosidade) não reinicia a sequência de avisos
+      if (state === 'done' || seenDone) break;
       setState('done', 'Terminei!', project);
-      chirp(SOUND.done);
-      backToSleep = setTimeout(() => setState('idle'), 15000);
+      nudge('done');
       break;
     case 'waiting':
       setState('waiting', ev.message || 'Preciso de você aqui.', project, true);
-      chirp(SOUND.waiting);
+      nudge('waiting');
       break;
   }
 }
 
 /* ===================== INTERAÇÃO ===================== */
-const dismiss = () => setState('idle');
+const dismiss = () => {
+  if (state === 'done') seenDone = true;
+  setState('idle');
+};
 $('bubble').addEventListener('click', dismiss);
 $('sloth').addEventListener('click', dismiss);
 $('mute').addEventListener('click', () => {
