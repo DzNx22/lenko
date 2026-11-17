@@ -59,7 +59,7 @@ Trabalhe uma fase por vez, em commits pequenos. Ao terminar cada item, marque aq
 ### Fase 0 — Fazer rodar
 - [x] `npm install` e `npm run dev` compilando sem erros no Windows
 - [x] Testar `npm run hooks:install` + `npm run test:done` com o app aberto
-- [ ] Testar com uma sessão real do Claude Code
+- [x] Testar com uma sessão real do Claude Code
 
 ### Fase 1 — Instalador de um clique (prioridade: é o que permite divulgar)
 Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero terminal, zero Node.
