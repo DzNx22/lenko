@@ -131,4 +131,6 @@ lenko/
 
 ## Licença
 
-[MIT](LICENSE) © Denzell
+Código-fonte sob a licença [MIT](LICENSE) © Denzell Barbosa.
+
+O nome LENKO / ЛЕНКО, o logo, os ícones e a arte dos personagens (incluindo a preguiça) não fazem parte da MIT e têm todos os direitos reservados. Forks podem usar o código à vontade, desde que troquem o nome e o mascote. Detalhes em [TRADEMARKS.md](TRADEMARKS.md).
