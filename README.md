@@ -42,10 +42,18 @@ LENKO é a identidade de um universo de personagens. A preguiça é a primeira e
 
 ## Instalar
 
-1. Baixe o instalador do seu sistema na [página de Releases](https://github.com/DzNx22/lenko/releases/latest):
-   - **Windows:** `LENKO_x.y.z_x64-setup.exe`
-   - **macOS:** `.dmg` (`aarch64` para Apple Silicon, `x64` para Intel)
-   - **Linux:** `.AppImage` ou `.deb`
+1. Baixe pela **[página de download](https://dznx22.github.io/lenko/)**, que já reconhece o seu sistema. Se preferir a [página de Releases](https://github.com/DzNx22/lenko/releases/latest), estes são os arquivos de cada sistema:
+
+   | Sistema | Arquivo |
+   |---|---|
+   | Windows | `LENKO_x.y.z_x64-setup.exe` |
+   | macOS (Apple Silicon) | `LENKO_x.y.z_aarch64.dmg` |
+   | macOS (Intel) | `LENKO_x.y.z_x64.dmg` |
+   | Linux, qualquer distribuição | `LENKO_x.y.z_amd64.AppImage` |
+   | Linux Debian/Ubuntu | `LENKO_x.y.z_amd64.deb` |
+   | Linux Fedora | `LENKO-x.y.z-1.x86_64.rpm` |
+
+   Os outros arquivos da Release (`.sig`, `.tar.gz`, `latest.json`) são usados pela atualização automática.
 2. Instale e abra. A preguiça aparece no canto inferior direito da tela.
 3. No balão "Quer que eu me conecte ao Claude Code?", clique em **Conectar** e reinicie o Claude Code.
 

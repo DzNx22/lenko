@@ -43,7 +43,7 @@ lenko/
 ├── src-tauri/tauri.conf.json   nome, identificador e janela do app
 ├── scripts/notify.js           adaptador genérico (hook → evento)
 ├── scripts/install-hooks.js    conecta e desconecta o Claude Code
-├── docs/                       GIF e imagem dos estados usados no README
+├── docs/                       página de download (GitHub Pages), GIF e imagem dos estados
 └── .github/workflows/          build dos instaladores a cada versão
 ```
 
