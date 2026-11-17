@@ -16,6 +16,9 @@ use std::time::{Duration, Instant};
 const STDIN_WAIT: Duration = Duration::from_millis(500);
 /// Orçamento total do processo, contando o stdin.
 const TOTAL_BUDGET: Duration = Duration::from_millis(900);
+/// Em localhost o app aceita a conexão em menos de 1 ms. Com o app fechado, o Windows
+/// leva ~2 s para recusar (tenta de novo várias vezes), então não vale esperar mais que isso.
+const CONNECT_WAIT: Duration = Duration::from_millis(150);
 
 #[derive(Debug, PartialEq)]
 pub struct NotifyArgs {
@@ -122,7 +125,7 @@ fn post(body: &str, budget: Duration) -> std::io::Result<()> {
             .max(Duration::from_millis(1))
     };
     let addr: SocketAddr = crate::ADDR.parse().expect("endereço fixo válido");
-    let mut stream = TcpStream::connect_timeout(&addr, left())?;
+    let mut stream = TcpStream::connect_timeout(&addr, left().min(CONNECT_WAIT))?;
     stream.set_write_timeout(Some(left()))?;
     write!(
         stream,
