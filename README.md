@@ -86,9 +86,30 @@ npm run test:done        # ela deve pular e dizer "Terminei!"
 
 Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
 
+Na primeira vez que abre, a preguiça também pergunta no balão se pode se conectar ao Claude Code. Clicar em **Conectar** faz o mesmo que o `hooks:install`, apontando para o próprio executável.
+
 > Para mexer só no visual, abra `src/index.html` no navegador e use as teclas **1–4** para simular os estados.
 
-**Uso:** arraste o galho para mover, clique no balão para dispensar o aviso e passe o mouse por cima para silenciar ou fechar.
+## Uso
+
+Na preguiça:
+
+- **Arraste o galho** para mover a preguiça pela tela.
+- **Clique no balão ou na preguiça** para dispensar o aviso.
+- **Passe o mouse por cima** para ver os botões de silenciar (♪) e fechar (×).
+
+Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tarefas. Se ele não aparecer, clique na setinha **^** para ver os ícones ocultos.
+
+- **Clique esquerdo** no ícone mostra ou oculta a preguiça.
+- **Clique direito** abre o menu:
+
+| Opção | O que faz |
+|---|---|
+| **Ocultar / Mostrar** | Esconde a preguiça sem fechar o app. Como ela não aparece na barra de tarefas, é por aqui que ela volta. |
+| **Silenciar sons** | Liga ou desliga os sons 8-bit. Fica sincronizado com o botão ♪ e é lembrado ao reabrir. |
+| **Tamanho** | Pequeno, Médio ou Grande. Só escalas inteiras, para o pixel art continuar nítido. O canto inferior direito fica no lugar. |
+| **Conectar / Desconectar do Claude Code** | Adiciona ou remove os hooks do LENKO no `~/.claude/settings.json`, sem mexer nos hooks de outras ferramentas. Reinicie o Claude Code depois. |
+| **Sair** | Fecha o LENKO. |
 
 ## Decisões técnicas
 
@@ -96,7 +117,7 @@ Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
 - **Integração pela IA, não pela IDE.** Um único contrato HTTP desacopla o mascote das ferramentas. Suportar uma nova IA é escrever um adaptador de poucas linhas, sem tocar no app.
 - **Adaptador que nunca trava a IA.** Se o app estiver fechado, o adaptador desiste em menos de um segundo e sai com sucesso. O mascote é opcional; o fluxo de trabalho não pode depender dele.
 - **Instalação reversível.** O instalador de hooks marca as próprias entradas, preserva configurações de terceiros e faz backup antes de alterar qualquer arquivo.
-- **Sprite como dados.** A pixel art é desenhada como uma grade de caracteres no código. Mudar uma expressão é editar uma linha, e isso prepara o terreno para skins.
+- **Sprite como dados.** A pixel art é desenhada como uma grade de caracteres no código. Mudar uma expressão é editar uma linha.
 
 ## Limitação conhecida
 
@@ -106,15 +127,19 @@ Na extensão nativa do Claude Code para VS Code, o aviso de "Preciso de você" n
 
 - [x] Mascote com quatro estados, balão e som
 - [x] Servidor local de eventos e adaptador para o Claude Code
+- [x] Conexão com o Claude Code pelo próprio app, sem terminal
+- [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar e sair
+- [ ] Opção de iniciar com o sistema
 - [ ] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
-- [ ] Atualização automática assinada
-- [ ] Ícone na bandeja e opção de iniciar com o sistema
-- [ ] Sistema de mascotes com pacotes `.mascote`
 - [ ] Adaptadores para outras ferramentas de IA de código
+
+## LENKO Pro
+
+Este repositório é a versão aberta do LENKO, com a preguiça. Depois que tudo aqui estiver validado, o projeto será clonado para o **LENKO Pro**, uma continuação com fins comerciais. É lá que vão ficar a loja de mascotes e as atualizações para quem tiver interesse.
 
 ## Contribuindo
 
-Contribuições são bem-vindas, principalmente adaptadores para outras ferramentas de IA e novos mascotes originais. Abra uma *issue* descrevendo a ideia antes de começar algo grande.
+Contribuições são bem-vindas, principalmente adaptadores para outras ferramentas de IA e correções de bugs. Abra uma *issue* descrevendo a ideia antes de começar algo grande.
 
 ## Estrutura
 
@@ -122,6 +147,10 @@ Contribuições são bem-vindas, principalmente adaptadores para outras ferramen
 lenko/
 ├── src/index.html              mascote: sprite, estados, balão e som
 ├── src-tauri/src/main.rs       janela transparente + servidor local na porta 7777
+├── src-tauri/src/notify.rs     modo --notify: o próprio executável serve de adaptador
+├── src-tauri/src/hooks.rs      conecta e desconecta o Claude Code
+├── src-tauri/src/tray.rs       ícone e menu na bandeja do sistema
+├── src-tauri/src/config.rs     preferências salvas (conexão, som, tamanho)
 ├── src-tauri/tauri.conf.json   nome, identificador e janela do app
 ├── scripts/notify.js           adaptador genérico (hook → evento)
 ├── scripts/install-hooks.js    conecta e desconecta o Claude Code
