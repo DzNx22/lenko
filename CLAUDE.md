@@ -65,8 +65,8 @@ Trabalhe uma fase por vez, em commits pequenos. Ao terminar cada item, marque aq
 Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero terminal, zero Node.
 - [x] **Modo `--notify` no executável**: `lenko.exe --notify done --tool claude-code` lê o stdin do hook, manda o POST para a instância aberta e sai em milissegundos, sem abrir janela. Substitui `scripts/notify.js` como adaptador padrão. Considerar `tauri-plugin-single-instance`.
 - [x] **Conectar ao Claude Code pela interface**: no primeiro uso, balão "Quer que eu me conecte ao Claude Code?" → o app edita `~/.claude/settings.json` com a mesma lógica do `install-hooks.js` (portar para Rust), apontando para o próprio executável.
-- [ ] Opção de desconectar (remove só as entradas `--preguica`).
-- [ ] Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
+- [x] Opção de desconectar (remove só as entradas `--preguica`).
+- [x] Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
 - [ ] Iniciar com o sistema (`tauri-plugin-autostart`), desligado por padrão.
 - [ ] **Atualização automática (obrigatória antes do primeiro lançamento público).** Quem instalar uma versão sem updater fica preso nela para sempre.
   - Adicionar `tauri-plugin-updater` e `tauri-plugin-process` (para reiniciar após atualizar).
