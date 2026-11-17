@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Adaptador genérico: recebe o JSON do hook pelo stdin e avisa a Preguiça.
+// Adaptador genérico: recebe o JSON do hook pelo stdin e avisa o LENKO.
 // Uso: node notify.js <working|done|waiting> [nome-da-ferramenta]
-// Nunca falha: se a Preguiça estiver fechada, sai em silêncio para não travar a IA.
+// Nunca falha: se o LENKO estiver fechado, sai em silêncio para não travar a IA.
 const http = require('http');
 const path = require('path');
 

@@ -1,10 +1,14 @@
-# Preguiça — guia para o Claude Code
+# LENKO — guia para o Claude Code
 
 Este arquivo é o contexto do projeto. Leia inteiro antes de mexer em qualquer coisa.
 
 ## O que é
 
-Mascote de desktop 8-bit (uma preguiça pendurada num galho) que avisa quando uma IA de código termina uma tarefa ou precisa de aprovação. Começou com o Claude Code; o objetivo é atender qualquer ferramenta de IA de código, em qualquer IDE ou terminal.
+LENKO é um mascote de desktop 8-bit que avisa quando uma IA de código termina uma tarefa ou precisa de aprovação. Começou com o Claude Code; o objetivo é atender qualquer ferramenta de IA de código, em qualquer IDE ou terminal. O mascote padrão é uma preguiça pendurada num galho.
+
+**Origem do nome.** LENKO (ЛЕНКО) une duas palavras russas: *Lenivets* (ленивец), "preguiça", e *Kompanion* (компаньон), "companheiro". O nome representa um pequeno companheiro digital, de personalidade descontraída, que fica ao lado do usuário no desktop e aparece quando tem algo importante a comunicar. LENKO é a identidade de um universo de personagens; a preguiça é a primeira e o mascote padrão.
+
+Em todo lugar técnico ou de busca, usar a forma latina (`lenko`, `LENKO`, `com.lenko.app`). ЛЕНКО aparece só como detalhe visual no README, sempre junto de LENKO. A marca `--preguica` dos hooks e o backup `settings.json.bak-preguica` continuam com o nome antigo de propósito: trocar deixaria entradas órfãs no `settings.json` de quem já instalou.
 
 O projeto tem dois papéis ao mesmo tempo:
 
@@ -59,7 +63,7 @@ Trabalhe uma fase por vez, em commits pequenos. Ao terminar cada item, marque aq
 
 ### Fase 1 — Instalador de um clique (prioridade: é o que permite divulgar)
 Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero terminal, zero Node.
-- [ ] **Modo `--notify` no executável**: `preguica.exe --notify done --tool claude-code` lê o stdin do hook, manda o POST para a instância aberta e sai em milissegundos, sem abrir janela. Substitui `scripts/notify.js` como adaptador padrão. Considerar `tauri-plugin-single-instance`.
+- [ ] **Modo `--notify` no executável**: `lenko.exe --notify done --tool claude-code` lê o stdin do hook, manda o POST para a instância aberta e sai em milissegundos, sem abrir janela. Substitui `scripts/notify.js` como adaptador padrão. Considerar `tauri-plugin-single-instance`.
 - [ ] **Conectar ao Claude Code pela interface**: no primeiro uso, balão "Quer que eu me conecte ao Claude Code?" → o app edita `~/.claude/settings.json` com a mesma lógica do `install-hooks.js` (portar para Rust), apontando para o próprio executável.
 - [ ] Opção de desconectar (remove só as entradas `--preguica`).
 - [ ] Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
@@ -68,7 +72,7 @@ Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero termina
   - Adicionar `tauri-plugin-updater` e `tauri-plugin-process` (para reiniciar após atualizar).
   - Gerar o par de chaves com `npx tauri signer generate`. A chave pública vai em `tauri.conf.json` (`plugins.updater.pubkey`); a privada e a senha vão como secrets do GitHub (`TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). **Nunca commitar a chave privada.** Avisar o autor para guardar uma cópia fora do computador: perder a chave impede atualizar os apps já instalados.
   - Ativar `bundle.createUpdaterArtifacts` e passar os secrets e `includeUpdaterJson: true` no `tauri-action` do workflow de release, para publicar o `latest.json` junto dos instaladores.
-  - Endpoint: `https://github.com/<usuario>/preguica/releases/latest/download/latest.json`.
+  - Endpoint: `https://github.com/<usuario>/lenko/releases/latest/download/latest.json`.
   - UX: verificar ao abrir e a cada poucas horas; a preguiça mostra o balão "Tenho uma atualização!" e só instala com o clique do usuário.
 - [ ] Assinatura de código: deixar o workflow pronto para receber o certificado do Windows via secrets quando o autor tiver um, sem quebrar o build enquanto não houver.
 - [ ] Validar o workflow `.github/workflows/release.yml`: criar a tag `v0.1.0` e conferir os instaladores e o `latest.json` na página de Releases. Testar a atualização instalando a v0.1.0 e lançando uma v0.1.1.
@@ -91,8 +95,8 @@ Princípio: depois desta fase, **personagens novos nunca exigem atualizar o app*
 ### Fase 4 — Loja (futuro, fora deste repositório)
 
 Separação entre portfólio e negócio:
-- **Este repositório (público, MIT):** o app e a preguiça. É o portfólio. Aqui fica só o *cliente* da loja: tela de catálogo, fluxo de compra, download e verificação de licença.
-- **Repositório privado separado (`preguica-loja` ou similar):** servidor da loja, catálogo e pacotes pagos. Nada disso entra aqui, nem em exemplos, testes ou commits.
+- **Este repositório (público, MIT):** o app LENKO e a preguiça. É o portfólio. Aqui fica só o *cliente* da loja: tela de catálogo, fluxo de compra, download e verificação de licença.
+- **Repositório privado separado (`lenko-loja`):** servidor da loja, catálogo e pacotes pagos. Nada disso entra aqui, nem em exemplos, testes ou commits.
 
 Arquitetura planejada:
 - **Catálogo:** JSON servido por um endpoint próprio (Cloudflare Workers + R2), com id, nome, preço, prévia e versão de cada mascote. Adicionar um personagem = editar o catálogo e subir o pacote; não exige versão nova do app.

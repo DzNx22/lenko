@@ -53,7 +53,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Preguiça v__VERSION__'
+          releaseName: 'LENKO v__VERSION__'
           releaseBody: 'Baixe o instalador do seu sistema em Assets, logo abaixo.'
           releaseDraft: true
           prerelease: false

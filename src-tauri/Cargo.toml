@@ -1,5 +1,5 @@
 [package]
-name = "preguica"
+name = "lenko"
 version = "0.1.0"
 description = "Mascote que avisa quando a IA de código termina"
 edition = "2021"

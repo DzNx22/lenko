@@ -35,7 +35,7 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("erro ao iniciar a Preguiça");
+        .expect("erro ao iniciar o LENKO");
 }
 
 /// Coloca a janela no canto inferior direito do monitor atual.
@@ -58,7 +58,7 @@ fn run_server(handle: tauri::AppHandle) {
     let server = match tiny_http::Server::http(ADDR) {
         Ok(s) => s,
         Err(e) => {
-            eprintln!("Não consegui abrir {ADDR}: {e}. Já tem outra Preguiça aberta?");
+            eprintln!("Não consegui abrir {ADDR}: {e}. Já tem outro LENKO aberto?");
             return;
         }
     };

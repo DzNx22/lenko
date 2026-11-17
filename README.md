@@ -1,12 +1,14 @@
 <div align="center">
 
-# 🦥 Preguiça
+# LENKO
 
-**Um mascote 8-bit que avisa quando a sua IA de código terminou o trabalho.**
+<sub>ЛЕНКО</sub>
 
-Pare de ficar olhando para o terminal esperando o agente acabar. A preguiça acorda quando você manda um prompt, pula quando a tarefa termina e balança os braços quando a IA precisa da sua aprovação.
+**Um companheiro 8-bit que avisa quando a sua IA de código terminou o trabalho.**
 
-![Preguiça reagindo a uma sessão no terminal](docs/demo.gif)
+O LENKO vive no canto da tela, e o mascote padrão é uma preguiça. Pare de ficar olhando para o terminal esperando o agente acabar. A preguiça acorda quando você manda um prompt, pula quando a tarefa termina e balança os braços quando a IA precisa da sua aprovação.
+
+![A preguiça, mascote padrão do LENKO, reagindo a uma sessão no terminal](docs/demo.gif)
 
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-6E9E4F)](LICENSE)
 ![Tauri 2](https://img.shields.io/badge/Tauri-2-8A6F55)
@@ -19,7 +21,13 @@ Pare de ficar olhando para o terminal esperando o agente acabar. A preguiça aco
 
 Agentes de IA para código levam de segundos a vários minutos por tarefa. Nesse intervalo, ou você fica preso olhando o terminal, ou troca de janela e esquece de voltar. Quando a IA para no meio pedindo permissão, o tempo perdido é ainda maior.
 
-Notificações do sistema resolvem parte do problema, mas somem e se misturam com todo o resto. A Preguiça fica num canto da tela, discreta enquanto dorme, e impossível de ignorar quando tem algo para você.
+Notificações do sistema resolvem parte do problema, mas somem e se misturam com todo o resto. O LENKO fica num canto da tela, discreto enquanto dorme, e impossível de ignorar quando tem algo para você.
+
+## Por que LENKO?
+
+LENKO (ЛЕНКО) une duas palavras russas: *Lenivets* (ленивец), "preguiça", e *Kompanion* (компаньон), "companheiro". É um pequeno companheiro digital, de personalidade descontraída, que fica ao seu lado no desktop e aparece quando tem algo importante a dizer.
+
+LENKO é a identidade de um universo de personagens. A preguiça é a primeira e o mascote padrão.
 
 ## Estados
 
@@ -69,7 +77,7 @@ npm install
 npm run dev              # a primeira compilação demora alguns minutos
 ```
 
-Com a preguiça aberta, em outro terminal:
+Com o LENKO aberto, em outro terminal:
 
 ```bash
 npm run hooks:install    # conecta ao Claude Code (faz backup do settings.json)
@@ -111,11 +119,14 @@ Contribuições são bem-vindas, principalmente adaptadores para outras ferramen
 ## Estrutura
 
 ```
-src/index.html              mascote: sprite, estados, balão e som
-src-tauri/src/main.rs       janela transparente + servidor local na porta 7777
-scripts/notify.js           adaptador genérico (hook → evento)
-scripts/install-hooks.js    conecta e desconecta o Claude Code
-.github/workflows/          build dos instaladores a cada versão
+lenko/
+├── src/index.html              mascote: sprite, estados, balão e som
+├── src-tauri/src/main.rs       janela transparente + servidor local na porta 7777
+├── src-tauri/tauri.conf.json   nome, identificador e janela do app
+├── scripts/notify.js           adaptador genérico (hook → evento)
+├── scripts/install-hooks.js    conecta e desconecta o Claude Code
+├── docs/                       GIF e imagem dos estados usados no README
+└── .github/workflows/          build dos instaladores a cada versão
 ```
 
 ## Licença
