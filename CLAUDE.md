@@ -67,7 +67,7 @@ Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero termina
 - [x] **Conectar ao Claude Code pela interface**: no primeiro uso, balão "Quer que eu me conecte ao Claude Code?" → o app edita `~/.claude/settings.json` com a mesma lógica do `install-hooks.js` (portar para Rust), apontando para o próprio executável.
 - [x] Opção de desconectar (remove só as entradas `--preguica`).
 - [x] Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
-- [ ] Iniciar com o sistema (`tauri-plugin-autostart`), desligado por padrão.
+- [x] Iniciar com o sistema (`tauri-plugin-autostart`), desligado por padrão.
 - [ ] **Atualização automática (obrigatória antes do primeiro lançamento público).** Quem instalar uma versão sem updater fica preso nela para sempre.
   - Adicionar `tauri-plugin-updater` e `tauri-plugin-process` (para reiniciar após atualizar).
   - Gerar o par de chaves com `npx tauri signer generate`. A chave pública vai em `tauri.conf.json` (`plugins.updater.pubkey`); a privada e a senha vão como secrets do GitHub (`TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). **Nunca commitar a chave privada.** Avisar o autor para guardar uma cópia fora do computador: perder a chave impede atualizar os apps já instalados.
