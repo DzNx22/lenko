@@ -4,6 +4,7 @@
 mod config;
 mod hooks;
 mod notify;
+mod tray;
 
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -41,13 +42,16 @@ fn main() {
             claude_should_ask,
             claude_connect,
             claude_decline,
-            claude_disconnect
+            claude_disconnect,
+            muted_get,
+            muted_set
         ])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
                 position_bottom_right(&win);
             }
             repair_claude_hooks(app.handle());
+            tray::build(app.handle())?;
             let handle = app.handle().clone();
             thread::spawn(move || run_server(handle));
             Ok(())
@@ -104,7 +108,9 @@ fn claude_should_ask(app: tauri::AppHandle) -> bool {
 
 #[tauri::command]
 fn claude_connect(app: tauri::AppHandle) -> Result<(), String> {
-    hooks::connect(&claude_settings(&app)?, &current_exe()?).map_err(|e| e.to_string())?;
+    let result = hooks::connect(&claude_settings(&app)?, &current_exe()?).map_err(|e| e.to_string());
+    tray::refresh_claude(&app);
+    result?;
     remember(&app, config::ClaudeCode::Connected)
 }
 
@@ -113,11 +119,36 @@ fn claude_decline(app: tauri::AppHandle) -> Result<(), String> {
     remember(&app, config::ClaudeCode::Declined)
 }
 
-/// Remove só as entradas do LENKO. Ganha botão na bandeja no próximo passo.
+/// Remove só as entradas do LENKO (item da bandeja).
 #[tauri::command]
 fn claude_disconnect(app: tauri::AppHandle) -> Result<(), String> {
-    hooks::disconnect(&claude_settings(&app)?).map_err(|e| e.to_string())?;
+    let result = hooks::disconnect(&claude_settings(&app)?).map_err(|e| e.to_string());
+    tray::refresh_claude(&app);
+    result?;
     remember(&app, config::ClaudeCode::Declined)
+}
+
+// ---------------------------------------------------------------------------
+// Som (lembrado entre aberturas)
+// ---------------------------------------------------------------------------
+
+fn save_muted(app: &tauri::AppHandle, muted: bool) -> Result<(), String> {
+    let dir = config_dir(app)?;
+    let mut cfg = config::load(&dir);
+    cfg.muted = muted;
+    config::save(&dir, &cfg).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn muted_get(app: tauri::AppHandle) -> bool {
+    config_dir(&app).is_ok_and(|dir| config::load(&dir).muted)
+}
+
+/// Chamado pelo botão ♪ da preguiça.
+#[tauri::command]
+fn muted_set(app: tauri::AppHandle, muted: bool) -> Result<(), String> {
+    tray::set_muted(&app, muted);
+    save_muted(&app, muted)
 }
 
 /// Coloca a janela no canto inferior direito do monitor atual.

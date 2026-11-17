@@ -17,6 +17,9 @@ pub struct Config {
     /// Resposta ao "Quer que eu me conecte ao Claude Code?". `None` = ainda não perguntou.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub claude_code: Option<ClaudeCode>,
+    /// Sons desligados (bandeja ou botão ♪).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub muted: bool,
 }
 
 fn file(dir: &Path) -> PathBuf {

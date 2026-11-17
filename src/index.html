@@ -293,7 +293,7 @@ function onEvent(ev) {
 
 /* ===================== CONEXÃO COM O CLAUDE CODE ===================== */
 // No navegador (sem Tauri) os botões só simulam a resposta
-const invoke = (cmd) => tauri ? tauri.core.invoke(cmd) : Promise.resolve();
+const invoke = (cmd, args) => tauri ? tauri.core.invoke(cmd, args) : Promise.resolve();
 
 function askToConnect() {
   const text = document.createDocumentFragment();
@@ -331,15 +331,28 @@ const dismiss = () => {
 };
 $('bubble').addEventListener('click', dismiss);
 $('sloth').addEventListener('click', dismiss);
-$('mute').addEventListener('click', () => {
-  muted = !muted;
+function setMuted(value) {
+  muted = value;
   $('mute').textContent = muted ? '–' : '♪';
   $('mute').title = muted ? 'Ativar sons' : 'Silenciar sons';
+}
+$('mute').addEventListener('click', () => {
+  setMuted(!muted);
+  invoke('muted_set', { muted }).catch(() => {});
 });
+
+// Resultado de conectar/desconectar pela bandeja (também encerra a pergunta, se aberta)
+function onNotice({ ok, text }) {
+  if (ok) { setState('done', text); chirp(SOUND.done); }
+  else { setState('waiting', text, '', true); chirp(SOUND.waiting); }
+}
 
 const tauri = window.__TAURI__;
 if (tauri) {
   tauri.event.listen('ai-event', e => onEvent(e.payload));
+  tauri.event.listen('notice', e => onNotice(e.payload));
+  tauri.event.listen('muted', e => setMuted(e.payload));
+  invoke('muted_get').then(setMuted).catch(() => {});
   tauri.core.invoke('claude_should_ask').then(ask => ask && askToConnect());
   $('quit').addEventListener('click', () => tauri.window.getCurrentWindow().close());
 } else {
