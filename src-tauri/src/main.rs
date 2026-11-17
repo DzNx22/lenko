@@ -1,10 +1,13 @@
 // Esconde o console no Windows em builds de release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod config;
+mod hooks;
 mod notify;
 
 use serde::{Deserialize, Serialize};
 use std::io::Read;
+use std::path::PathBuf;
 use std::thread;
 use tauri::{Emitter, Manager, PhysicalPosition};
 
@@ -34,16 +37,87 @@ fn main() {
     }
 
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            claude_should_ask,
+            claude_connect,
+            claude_decline,
+            claude_disconnect
+        ])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
                 position_bottom_right(&win);
             }
+            repair_claude_hooks(app.handle());
             let handle = app.handle().clone();
             thread::spawn(move || run_server(handle));
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o LENKO");
+}
+
+// ---------------------------------------------------------------------------
+// Conexão com o Claude Code
+// ---------------------------------------------------------------------------
+
+fn config_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    app.path().app_config_dir().map_err(|e| e.to_string())
+}
+
+fn claude_settings(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let home = app.path().home_dir().map_err(|e| e.to_string())?;
+    Ok(hooks::settings_path(&home))
+}
+
+fn current_exe() -> Result<PathBuf, String> {
+    std::env::current_exe().map_err(|e| e.to_string())
+}
+
+fn remember(app: &tauri::AppHandle, answer: config::ClaudeCode) -> Result<(), String> {
+    let dir = config_dir(app)?;
+    let mut cfg = config::load(&dir);
+    cfg.claude_code = Some(answer);
+    config::save(&dir, &cfg).map_err(|e| e.to_string())
+}
+
+/// Se o usuário já conectou e o executável mudou de lugar (reinstalação ou
+/// atualização), aponta os hooks para o caminho novo sem perguntar de novo.
+/// Se as entradas foram removidas à mão, respeita e não recria.
+fn repair_claude_hooks(app: &tauri::AppHandle) {
+    let Ok(dir) = config_dir(app) else { return };
+    if config::load(&dir).claude_code != Some(config::ClaudeCode::Connected) {
+        return;
+    }
+    let (Ok(settings), Ok(exe)) = (claude_settings(app), current_exe()) else { return };
+    if hooks::read_status(&settings, &exe) == Ok(hooks::Status::Outdated) {
+        if let Err(e) = hooks::connect(&settings, &exe) {
+            eprintln!("Não consegui corrigir os hooks do Claude Code: {e}");
+        }
+    }
+}
+
+/// O balão "Quer que eu me conecte ao Claude Code?" só aparece se ainda não perguntou.
+#[tauri::command]
+fn claude_should_ask(app: tauri::AppHandle) -> bool {
+    config_dir(&app).is_ok_and(|dir| config::load(&dir).claude_code.is_none())
+}
+
+#[tauri::command]
+fn claude_connect(app: tauri::AppHandle) -> Result<(), String> {
+    hooks::connect(&claude_settings(&app)?, &current_exe()?).map_err(|e| e.to_string())?;
+    remember(&app, config::ClaudeCode::Connected)
+}
+
+#[tauri::command]
+fn claude_decline(app: tauri::AppHandle) -> Result<(), String> {
+    remember(&app, config::ClaudeCode::Declined)
+}
+
+/// Remove só as entradas do LENKO. Ganha botão na bandeja no próximo passo.
+#[tauri::command]
+fn claude_disconnect(app: tauri::AppHandle) -> Result<(), String> {
+    hooks::disconnect(&claude_settings(&app)?).map_err(|e| e.to_string())?;
+    remember(&app, config::ClaudeCode::Declined)
 }
 
 /// Coloca a janela no canto inferior direito do monitor atual.
