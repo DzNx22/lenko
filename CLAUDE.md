@@ -46,15 +46,15 @@ Limitação conhecida: na extensão nativa do Claude Code para VS Code, o hook `
 ## Estado atual
 
 - O frontend e os scripts Node foram testados.
-- **O Rust nunca foi compilado.** A primeira tarefa é rodar `npm install && npm run dev` e corrigir o que aparecer.
+- O Rust compila sem erros nem avisos no Windows 11 (Rust 1.100, MSVC, Tauri 2.12). Janela, servidor HTTP, `/health` e os três estados foram testados com o app aberto.
 
 ## Roadmap
 
 Trabalhe uma fase por vez, em commits pequenos. Ao terminar cada item, marque aqui com `[x]`.
 
 ### Fase 0 — Fazer rodar
-- [ ] `npm install` e `npm run dev` compilando sem erros no Windows
-- [ ] Testar `npm run hooks:install` + `npm run test:done` com o app aberto
+- [x] `npm install` e `npm run dev` compilando sem erros no Windows
+- [x] Testar `npm run hooks:install` + `npm run test:done` com o app aberto
 - [ ] Testar com uma sessão real do Claude Code
 
 ### Fase 1 — Instalador de um clique (prioridade: é o que permite divulgar)
