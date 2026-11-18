@@ -4,7 +4,7 @@ A [licença MIT](LICENSE) deste repositório vale para o **código-fonte**. Ela 
 
 - o nome **LENKO** e sua forma em cirílico **ЛЕНКО**;
 - o logo e os ícones do app (`src-tauri/icons/`);
-- a arte dos personagens, incluindo a preguiça: os desenhos em pixel art definidos em `src/index.html` (as grades de `PAL`, `BRANCH` e `body()`), além de qualquer sprite ou pacote `.mascote` oficial;
+- a arte dos personagens, incluindo a preguiça: os desenhos em pixel art definidos em `scripts/gerar-preguica.js` (as grades de `PAL`, `BRANCH` e dos quadros), as imagens em `src/mascotes/preguica/`, além de qualquer sprite ou pacote `.mascote` oficial;
 - as imagens de divulgação `docs/demo.gif` e `docs/estados.png`.
 
 O código que desenha, anima e controla os personagens continua sob a MIT. Só os desenhos em si ficam reservados.

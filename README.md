@@ -8,8 +8,16 @@
 
 O LENKO vive no canto da tela, e o mascote padrão é uma preguiça. Pare de ficar olhando para o terminal esperando o agente acabar. A preguiça acorda quando você manda um prompt, pula quando a tarefa termina e balança os braços quando a IA precisa da sua aprovação.
 
+### [⬇ Baixar o LENKO](https://dznx22.github.io/lenko/)
+
+Windows · macOS · Linux — grátis, sem conta, poucos megabytes
+
 ![A preguiça, mascote padrão do LENKO, reagindo a uma sessão no terminal](docs/demo.gif)
 
+**Funciona com** Claude Code · Codex · Gemini CLI · Cursor, em qualquer IDE ou terminal.
+
+[![Versão](https://img.shields.io/github/v/release/DzNx22/lenko?label=versão&color=6E9E4F)](https://github.com/DzNx22/lenko/releases/latest)
+[![Testes](https://github.com/DzNx22/lenko/actions/workflows/ci.yml/badge.svg)](https://github.com/DzNx22/lenko/actions/workflows/ci.yml)
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-6E9E4F)](LICENSE)
 ![Tauri 2](https://img.shields.io/badge/Tauri-2-8A6F55)
 ![Rust](https://img.shields.io/badge/Rust-backend-3B2A1E)
@@ -64,6 +72,10 @@ Pronto: sem terminal e sem Node. Para desconectar depois, use o menu da bandeja.
 > No Windows, enquanto o instalador não tiver assinatura digital, o SmartScreen pode mostrar "O Windows protegeu o computador". Clique em **Mais informações → Executar assim mesmo**.
 
 O LENKO se atualiza sozinho. Quando sai uma versão nova, a preguiça avisa no balão e só instala quando você clica em **Atualizar**. Também dá para procurar na hora pelo menu da bandeja.
+
+## Privacidade
+
+Tudo acontece no seu computador. O LENKO não pede conta, não coleta dados e não lê o seu código: recebe apenas o tipo de evento e o nome da pasta do projeto, por um servidor que escuta só em `127.0.0.1`. A única conexão externa é a verificação de atualizações nas Releases deste repositório.
 
 ## Ferramentas suportadas
 
@@ -122,10 +134,17 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 | **Ocultar / Mostrar** | Esconde a preguiça sem fechar o app. Como ela não aparece na barra de tarefas, é por aqui que ela volta. |
 | **Silenciar sons** | Liga ou desliga os sons 8-bit. Fica sincronizado com o botão ♪ e é lembrado ao reabrir. |
 | **Tamanho** | Pequeno, Médio ou Grande. Só escalas inteiras, para o pixel art continuar nítido. O canto inferior direito fica no lugar. |
+| **Mascote** | Troca o mascote ou remove um que você instalou. |
 | **Conectar à IA** | Marca ou desmarca cada ferramenta (Claude Code, Codex, Gemini CLI, Cursor). Adiciona ou remove só os hooks do LENKO no arquivo de configuração dela, com backup, sem mexer em hooks de terceiros. Ferramentas não encontradas no computador aparecem desabilitadas. |
 | **Iniciar com o sistema** | Abre o LENKO junto com o computador. Vem desligado. |
 | **Procurar atualizações** | Verifica na hora se há versão nova. A verificação automática já acontece ao abrir e a cada 6 horas. |
 | **Sair** | Fecha o LENKO. |
+
+## Mascotes
+
+A preguiça é só o primeiro. Um mascote é um arquivo `.mascote`: um pacote com a spritesheet, o objeto onde ele se segura e, se quiser, sons próprios. Para instalar, **arraste o arquivo até o LENKO**; para trocar, use o menu **Mascote** na bandeja.
+
+Pacotes são só dados, nunca código: o LENKO aceita uma lista fechada de arquivos, confere as imagens e recusa pacotes grandes demais. Quer criar o seu? O formato está em [docs/criar-mascote.md](docs/criar-mascote.md).
 
 ## Decisões técnicas
 
@@ -134,6 +153,8 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 - **Adaptador que nunca trava a IA.** Se o app estiver fechado, o adaptador desiste em menos de um segundo e sai com sucesso. O mascote é opcional; o fluxo de trabalho não pode depender dele.
 - **Instalação reversível.** O instalador de hooks marca as próprias entradas, preserva configurações de terceiros e faz backup antes de alterar qualquer arquivo.
 - **Sprite como dados.** A pixel art da preguiça é desenhada como uma grade de caracteres num script que gera a spritesheet. Mudar uma expressão é editar uma linha.
+- **Mascotes como pacotes seguros.** Um `.mascote` é um zip validado antes de tocar o disco: lista fechada de arquivos, limites de tamanho (inclusive contra *zip bomb*), formato e dimensões de cada imagem conferidos, instalação atômica. Nenhum script de terceiros roda no app.
+- **Atualização assinada.** Cada versão é assinada, e o app só instala o que confere com a chave pública embutida. A preguiça avisa, mas nada é instalado sem o clique do usuário.
 - **Um comando que roda em qualquer shell.** No Windows, cada ferramenta de IA executa o hook num shell diferente (Git Bash, PowerShell ou cmd), e um caminho com espaços entre aspas não roda no PowerShell. Para as ferramentas que usam PowerShell ou cmd, o LENKO registra o nome curto do executável (`C:/Users/FULANO~1/...`), que não tem espaços e funciona nos três.
 
 ## Limitação conhecida
@@ -144,15 +165,13 @@ Na extensão nativa do Claude Code para VS Code, o aviso de "Preciso de você" n
 
 - [x] Mascote com quatro estados, balão e som
 - [x] Servidor local de eventos e adaptador para o Claude Code
-- [x] Conexão com o Claude Code pelo próprio app, sem terminal
-- [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar, iniciar com o sistema e sair
-- [x] Opção de iniciar com o sistema
-- [x] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
+- [x] Instalador de um clique, sem terminal, com atualização automática
+- [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar, iniciar com o sistema
 - [x] Adaptadores para Codex, Gemini CLI e Cursor
-
-## LENKO Pro
-
-Este repositório é a versão aberta do LENKO, com a preguiça. Depois que tudo aqui estiver validado, o projeto será clonado para o **LENKO Pro**, uma continuação com fins comerciais. É lá que vão ficar a loja de mascotes e as atualizações para quem tiver interesse.
+- [x] Mascotes instaláveis arrastando um arquivo `.mascote`
+- [ ] Vários projetos ao mesmo tempo, com fila de avisos
+- [ ] Suporte a ferramentas de IA sem hooks
+- [ ] Novos mascotes oficiais
 
 ## Contribuindo
 
