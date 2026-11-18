@@ -7,7 +7,6 @@
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
-use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -92,10 +91,12 @@ pub fn build_body(args: &NotifyArgs, raw: &str) -> String {
         .map(String::from)
         .or_else(|| std::env::current_dir().ok().map(|p| p.to_string_lossy().into_owned()))
         .unwrap_or_default();
-    let project = Path::new(&cwd)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
+    // Divide nos dois separadores: o hook pode mandar caminho do Windows ou Unix
+    let project = cwd
+        .rsplit(['/', '\\'])
+        .find(|p| !p.is_empty())
+        .unwrap_or_default()
+        .to_string();
 
     let (kind, message) = classify(&args.kind, &hook);
     let mut ev = json!({ "tool": args.tool, "type": kind, "project": project });
