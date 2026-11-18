@@ -24,7 +24,9 @@ Ferramenta de IA ──hook──► adaptador ──POST /event──► app Ta
 ```
 
 - `src-tauri/src/main.rs` — janela transparente, sem borda, sempre no topo, posicionada no canto inferior direito. Sobe um servidor HTTP (`tiny_http`) em `127.0.0.1:7777` e repassa cada evento para o webview como `ai-event`.
-- `src/index.html` — o mascote inteiro: sprite desenhado como grade de caracteres (`PAL`, `BRANCH`, `body()`), estados, balão de fala, som 8-bit via Web Audio. Aberto direto no navegador, as teclas 1–4 simulam os estados.
+- `src/index.html` — o mascote inteiro: carrega a skin ativa (`skin_get`), anima os quadros de cada estado, balão de fala, som (o do pacote ou o bipe 8-bit via Web Audio). Instala `.mascote` soltos na janela. No navegador (`npm run preview`), as teclas 1–7 simulam os estados.
+- `src/mascotes/preguica/` — a preguiça no formato de mascote, gerada por `scripts/gerar-preguica.js` (o desenho fica lá, como grade de caracteres). Também vai embutida no executável.
+- `src-tauri/src/skin.rs` — formato `.mascote` (`FORMAT_VERSION`): lista fechada de arquivos, validação do manifest e das imagens, limites de tamanho (inclusive contra bomba de zip) e instalação atômica em `app_data_dir/mascotes/<id>/`. A preguiça é reservada e não pode ser sobrescrita. Formato documentado em `docs/criar-mascote.md`.
 - `src-tauri/src/focus.rs` — no Windows, percebe quando o dev volta para um terminal/editor (janela em primeiro plano) e emite `dev-focus`: a preguiça dispensa o "Terminei!" e para de insistir no pedido de aprovação.
 - `scripts/notify.js` — adaptador genérico: lê o JSON do hook pelo stdin, extrai o nome do projeto do `cwd` e faz o POST. Nunca falha (se o app estiver fechado, sai com código 0 para não travar a IA).
 - `scripts/install-hooks.js` — adiciona/remove os hooks em `~/.claude/settings.json`. Marca as entradas com `--preguica`, preserva hooks de terceiros, faz backup em `settings.json.bak-preguica`.
@@ -83,12 +85,12 @@ Meta: o usuário baixa o instalador, instala e clica em "Conectar". Zero termina
 
 ### Fase 2 — Sistema de skins (fundação da loja)
 Princípio: depois desta fase, **personagens novos nunca exigem atualizar o app**. Funcionalidades (adaptadores, telas) chegam pelo updater; personagens chegam como pacotes baixados.
-- [ ] Definir o formato de pacote `.mascote` (zip): `manifest.json` (id, nome, autor, versão, licença, `formatVersion`), sprites por estado (spritesheet PNG + frames), sons opcionais. Versionar o formato desde o início para pacotes antigos continuarem funcionando.
-- [ ] Pacotes são dados, nunca código: sem JS/HTML executável dentro do `.mascote`. Validar o manifest e limitar o tamanho ao instalar.
-- [ ] Guardar pacotes instalados na pasta de dados do app (`app_data_dir`), não na pasta do executável.
-- [ ] Extrair a preguiça atual para esse formato e tratá-la como skin padrão.
-- [ ] Instalar skin arrastando o arquivo para o mascote; trocar pela bandeja.
-- [ ] Documentar o formato em `docs/criar-mascote.md` para criadores.
+- [x] Definir o formato de pacote `.mascote` (zip): `manifest.json` (id, nome, autor, versão, licença, `formatVersion`), sprites por estado (spritesheet PNG + frames), sons opcionais. Versionar o formato desde o início para pacotes antigos continuarem funcionando.
+- [x] Pacotes são dados, nunca código: sem JS/HTML executável dentro do `.mascote`. Validar o manifest e limitar o tamanho ao instalar.
+- [x] Guardar pacotes instalados na pasta de dados do app (`app_data_dir`), não na pasta do executável.
+- [x] Extrair a preguiça atual para esse formato e tratá-la como skin padrão.
+- [x] Instalar skin arrastando o arquivo para o mascote; trocar pela bandeja.
+- [x] Documentar o formato em `docs/criar-mascote.md` para criadores.
 
 ### Fase 3 — Mais ferramentas e atualização
 - [ ] Adaptadores para outras ferramentas de IA de código (usar o mecanismo de hook/notify de cada uma; se não houver, um wrapper que roda o processo e avisa ao sair).

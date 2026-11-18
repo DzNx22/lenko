@@ -21,7 +21,9 @@ npm run test:aprovacao   # simula um pedido de aprovação; Enter "aprova"
 
 Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
 
-> Para mexer só no visual, abra `src/index.html` no navegador e use as teclas **1–4** para simular os estados, **5** para a pergunta de conexão, **6** para o aviso de atualização e **7** para simular a volta ao terminal.
+> Para criar um mascote, veja [docs/criar-mascote.md](docs/criar-mascote.md) e empacote com `npm run mascote:empacotar -- <pasta>`.
+
+> Para mexer só no visual, rode `npm run preview`, abra http://localhost:5173 e use as teclas **1–4** para simular os estados, **5** para a pergunta de conexão, **6** para o aviso de atualização e **7** para simular a volta ao terminal.
 
 ## Testes
 
