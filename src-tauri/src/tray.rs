@@ -1,4 +1,4 @@
-//! Ícone na bandeja do sistema: mostrar/ocultar, silenciar, conectar/desconectar, sair.
+//! Ícone na bandeja do sistema: mostrar/ocultar, silenciar, mascote, conectar/desconectar, sair.
 //!
 //! Como a janela não aparece na barra de tarefas, a bandeja é o único jeito de
 //! trazer a preguiça de volta depois de ocultá-la.
@@ -9,7 +9,7 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, Tray
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_autostart::ManagerExt;
 
-use crate::{config, hooks, update};
+use crate::{config, hooks, skin, update};
 
 /// Itens que mudam de texto ou de marcação depois de criados.
 struct Items {
@@ -17,6 +17,7 @@ struct Items {
     mute: CheckMenuItem<Wry>,
     claude: MenuItem<Wry>,
     sizes: Vec<(u8, CheckMenuItem<Wry>)>,
+    skins: Submenu<Wry>,
     autostart: CheckMenuItem<Wry>,
 }
 
@@ -40,11 +41,14 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let size_refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
         sizes.iter().map(|(_, item)| item as &dyn tauri::menu::IsMenuItem<Wry>).collect();
     let size_menu = Submenu::with_items(app, "Tamanho", true, &size_refs)?;
+    let skins = Submenu::new(app, "Mascote", true)?;
+    fill_skins(app, &skins)?;
     let items = Items {
         toggle: MenuItem::with_id(app, "toggle", "Ocultar", true, None::<&str>)?,
         mute: CheckMenuItem::with_id(app, "mute", "Silenciar sons", true, muted, None::<&str>)?,
         claude: MenuItem::with_id(app, "claude", claude_label(app), true, None::<&str>)?,
         sizes,
+        skins,
         autostart: CheckMenuItem::with_id(
             app,
             "autostart",
@@ -61,6 +65,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             &items.toggle,
             &items.mute,
             &size_menu,
+            &items.skins,
             &items.claude,
             &items.autostart,
             &MenuItem::with_id(app, "update", "Procurar atualizações", true, None::<&str>)?,
@@ -108,6 +113,16 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
         "autostart" => toggle_autostart(app),
         "update" => check_update(app),
         "quit" => app.exit(0),
+        "skin-remove" => {
+            if let Err(text) = crate::remove_skin(app) {
+                let _ = app.emit("notice", Notice { ok: false, text });
+            }
+        }
+        id if id.starts_with("skin-") => {
+            if let Err(text) = crate::select_skin(app, &id["skin-".len()..]) {
+                let _ = app.emit("notice", Notice { ok: false, text });
+            }
+        }
         id => {
             let Some(scale) = id.strip_prefix("size-").and_then(|s| s.parse().ok()) else { return };
             // Funciona como opção única: só o tamanho escolhido fica marcado
@@ -201,5 +216,40 @@ pub fn refresh_claude(app: &AppHandle) {
 pub fn set_muted(app: &AppHandle, muted: bool) {
     if let Some(items) = app.try_state::<Items>() {
         let _ = items.mute.set_checked(muted);
+    }
+}
+
+/// Lista os mascotes disponíveis, marca o atual e oferece remover os instalados.
+fn fill_skins(app: &AppHandle, menu: &Submenu<Wry>) -> tauri::Result<()> {
+    for item in menu.items()? {
+        menu.remove(&item)?;
+    }
+    let active = crate::config_dir(app)
+        .ok()
+        .and_then(|dir| config::load(&dir).skin)
+        .unwrap_or_else(|| skin::DEFAULT_ID.into());
+    let installed = crate::data_dir(app).map(|dir| skin::list(&dir)).unwrap_or_default();
+    let mut found = false;
+    for m in &installed {
+        let checked = m.id == active;
+        found |= checked;
+        menu.append(&CheckMenuItem::with_id(app, format!("skin-{}", m.id), &m.name, true, checked, None::<&str>)?)?;
+    }
+    if installed.is_empty() {
+        // Sem pasta de dados: ainda assim mostra a preguiça
+        let name = skin::default_manifest().name;
+        menu.append(&CheckMenuItem::with_id(app, "skin-preguica", name, true, true, None::<&str>)?)?;
+    }
+    menu.append(&PredefinedMenuItem::separator(app)?)?;
+    let removable = found && active != skin::DEFAULT_ID;
+    menu.append(&MenuItem::with_id(app, "skin-remove", "Remover este mascote", removable, None::<&str>)?)?;
+    menu.append(&MenuItem::with_id(app, "skin-hint", "Para instalar, arraste um .mascote até mim", false, None::<&str>)?)?;
+    Ok(())
+}
+
+/// Atualiza a lista depois de instalar, trocar ou remover um mascote.
+pub fn refresh_skins(app: &AppHandle) {
+    if let Some(items) = app.try_state::<Items>() {
+        let _ = fill_skins(app, &items.skins);
     }
 }

@@ -120,80 +120,75 @@
   <div id="stage">
     <div id="bubble" role="status" aria-live="polite"></div>
     <div id="rig">
-      <canvas id="branch" data-tauri-drag-region title="Arraste o galho para mover"></canvas>
+      <canvas id="branch" data-tauri-drag-region title="Arraste para mover"></canvas>
       <canvas id="sloth" title="Clique para dispensar"></canvas>
       <span id="zzz">z z</span>
     </div>
   </div>
 
 <script>
-/* ===================== SPRITE 32 colunas ===================== */
+/* ===================== MASCOTE (skin) ===================== */
+// O desenho vem de um pacote de mascote (src/mascotes/preguica é o padrão):
+// spritesheet + prop (o galho) + manifest dizendo os quadros de cada estado.
 let SCALE = 5; // trocado pela bandeja (Tamanho)
-const PAL = {
-  O:'#3B2A1E', B:'#8A6F55', L:'#E6D3A8', E:'#4A3426', W:'#FFFFFF',
-  N:'#2A1D14', M:'#5A3A28', C:'#F2E6C9', T:'#6B4A2E', t:'#4F341F', g:'#6E9E4F'
-};
-const BRANCH = [
-  "................................",
-  "....gg.........g.........gg.....",
-  "TTTTTTTCCCTTTTTTTTTTTTCCCTTTTTTT",
-  "tttttttCCCttttttttttttCCCttttttt",
-];
-const face = mid => ".......OBB" + mid + "BBO.......";
-const EYES = {
-  open:   [face("LLEEELLEEELL"), face("LEEWELLEWEEL")],
-  closed: [face("LLEEELLEEELL"), face("LEEEELLEEEEL")],
-};
-const MOUTH = {
-  smile: [face("LLLLMLLMLLLL"), face("LLLLLMMLLLLL")],
-  open:  [face("LLLLLMMLLLLL"), face("LLLLLMMLLLLL")],
-  flat:  [face("LLLLLLLLLLLL"), face("LLLLMMMMLLLL")],
-};
-function body(eyes, mouth) {
-  return [
-    ".......OBBO..........OBBO.......",
-    ".......OBBO..........OBBO.......",
-    ".......OBBO.OOOOOOOO.OBBO.......",
-    ".......OBBOOBBBBBBBBOOBBO.......",
-    ".......OBBBBBLLLLLLBBBBBO.......",
-    ".......OBBBLLLLLLLLLLBBBO.......",
-    ...EYES[eyes],
-    face("LEELLLLLLEEL"),
-    face("LLLLLNNLLLLL"),
-    ...MOUTH[mouth],
-    ".......OBBBLLLLLLLLLLBBBO.......",
-    ".......OBBBBBLLLLLLBBBBBO.......",
-    "........OBBBBBBBBBBBBBBO........",
-    "........OBBBBBBBBBBBBBBO........",
-    "........OBBBBBBBBBBBBBBO........",
-    "........OBBBBBBBBBBBBBBO........",
-    ".........OBBBBBBBBBBBBO.........",
-    ".........OBBBBBBBBBBBBO.........",
-    "..........OBBO....OBBO..........",
-    "..........OBBO....OBBO..........",
-    "..........CCCO....OCCC..........",
-  ];
-}
-
-function paint(canvas, rows) {
-  canvas.width = rows[0].length * SCALE;
-  canvas.height = rows.length * SCALE;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  rows.forEach((row, y) => [...row].forEach((c, x) => {
-    if (c === '.') return;
-    ctx.fillStyle = PAL[c];
-    ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
-  }));
-}
+let skin = null; // { manifest, sprites: Image, prop: Image, sounds: { done?, waiting? } }
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const $ = id => document.getElementById(id);
-paint($('branch'), BRANCH);
+
+function loadImage(src) {
+  return new Promise((ok, fail) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = fail;
+    img.src = src;
+  });
+}
+
+async function loadSkin() {
+  const data = tauri
+    ? await invoke('skin_get')
+    : { // no navegador, lê a preguiça direto da pasta (precisa de um servidor: npm run preview)
+        manifest: await (await fetch('mascotes/preguica/manifest.json')).json(),
+        sprites: 'mascotes/preguica/sprites.png',
+        prop: 'mascotes/preguica/prop.png',
+        sounds: {},
+      };
+  const [sprites, prop] = await Promise.all([loadImage(data.sprites), loadImage(data.prop)]);
+  skin = { manifest: data.manifest, sprites, prop, sounds: data.sounds || {} };
+  $('sloth').title = `${skin.manifest.name}: clique para dispensar`;
+  paintProp();
+  restartAnim();
+}
+
+// Escala inteira e sem suavização, para o pixel art não borrar
+function canvasFor(canvas, w, h) {
+  if (canvas.width !== w * SCALE || canvas.height !== h * SCALE) {
+    canvas.width = w * SCALE;
+    canvas.height = h * SCALE;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  return ctx;
+}
+
+function paintProp() {
+  const img = skin.prop;
+  canvasFor($('branch'), img.width, img.height).drawImage(img, 0, 0, img.width * SCALE, img.height * SCALE);
+}
+
+// Quadros numerados da esquerda para a direita, de cima para baixo
+function paintFrame(i) {
+  const { width: w, height: h } = skin.manifest.frame;
+  const cols = skin.sprites.width / w;
+  canvasFor($('sloth'), w, h)
+    .drawImage(skin.sprites, (i % cols) * w, Math.floor(i / cols) * h, w, h, 0, 0, w * SCALE, h * SCALE);
+}
 
 function setScale(value) {
   SCALE = value;
-  paint($('branch'), BRANCH);
-  paint($('sloth'), body(...LOOK[state]));
+  if (skin) { paintProp(); restartAnim(); }
 }
 
 /* ===================== SOM 8-bit ===================== */
@@ -212,20 +207,24 @@ function chirp(notes) {
     t += dur * 0.9;
   }
 }
+// Som do mascote, se o pacote trouxer; senão, o bipe 8-bit
+function play(kind) {
+  if (muted) return;
+  const src = skin?.sounds[kind];
+  if (!src) return chirp(SOUND[kind]);
+  const audio = new Audio(src);
+  audio.volume = 0.6;
+  audio.play().catch(() => {});
+}
 const SOUND = {
   done:    [[523, .09], [659, .09], [784, .16]],
   waiting: [[784, .12], [523, .12], [784, .12], [523, .12]],
 };
 
 /* ===================== ESTADOS ===================== */
-const LOOK = {
-  idle:    ['closed', 'flat'],
-  working: ['open',   'flat'],
-  done:    ['open',   'smile'],
-  waiting: ['open',   'open'],
-  asking:  ['open',   'smile'],
-};
-let state = 'idle', blinkTimer, nudgeTimer;
+// Estado da preguiça → animação do manifest (a pergunta usa a cara de "terminei")
+const ANIM = { idle: 'idle', working: 'working', done: 'done', waiting: 'waiting', asking: 'done' };
+let state = 'idle', blinkTimer, nudgeTimer, animTimer, frameIdx = 0;
 let seenDone = false; // o dev já dispensou o "Terminei!" desta tarefa
 
 // Enquanto ninguém responde, a preguiça volta a chamar atenção (som + pulinho).
@@ -234,7 +233,7 @@ const NUDGE_DELAYS = [30, 60, 120, 300, 600].map(s => s * 1000);
 
 function nudge(kind, step = 0) {
   clearTimeout(nudgeTimer);
-  chirp(SOUND[kind]);
+  play(kind);
   const sloth = $('sloth');
   sloth.style.animation = 'none';
   void sloth.offsetWidth; // reinicia a animação do estado
@@ -248,7 +247,7 @@ function setState(next, text, project, alert = false) {
   state = next;
   document.body.className = next;
   clearTimeout(nudgeTimer);
-  paint($('sloth'), body(...LOOK[next]));
+  restartAnim();
 
   const bubble = $('bubble');
   if (text) {
@@ -264,16 +263,37 @@ function setState(next, text, project, alert = false) {
   } else {
     bubble.classList.remove('show');
   }
+}
+
+const anim = () => skin.manifest.states[ANIM[state]];
+
+// Mostra o primeiro quadro do estado e, se houver mais de um, anima no fps do manifest
+function restartAnim() {
+  clearInterval(animTimer);
+  frameIdx = 0;
+  if (!skin) return;
+  const a = anim();
+  paintFrame(a.frames[0]);
+  if (a.frames.length > 1 && !reducedMotion.matches) {
+    animTimer = setInterval(() => {
+      frameIdx = (frameIdx + 1) % a.frames.length;
+      paintFrame(a.frames[frameIdx]);
+    }, 1000 / (a.fps || 4));
+  }
   scheduleBlink();
 }
 
-// Piscadinha de vez em quando quando está acordada
+// Piscadinha de vez em quando, se o estado tiver um quadro de piscada
 function scheduleBlink() {
   clearTimeout(blinkTimer);
-  if (state === 'idle') return;
+  const a = skin && anim();
+  if (a?.blink == null) return;
   blinkTimer = setTimeout(() => {
-    paint($('sloth'), body('closed', LOOK[state][1]));
-    setTimeout(() => { paint($('sloth'), body(...LOOK[state])); scheduleBlink(); }, 140);
+    paintFrame(a.blink);
+    setTimeout(() => {
+      if (anim() === a) paintFrame(a.frames[frameIdx]);
+      scheduleBlink();
+    }, 140);
   }, 2500 + Math.random() * 3000);
 }
 
@@ -322,7 +342,7 @@ function ask(question, yesLabel, noLabel, onYes, onNo) {
 
 function fail(err) {
   setState('waiting', String(err), '', true);
-  chirp(SOUND.waiting);
+  play('waiting');
 }
 
 function askToConnect() {
@@ -331,7 +351,7 @@ function askToConnect() {
       try {
         await invoke('claude_connect');
         setState('done', 'Conectado! Reinicie o Claude Code para valer.');
-        chirp(SOUND.done);
+        play('done');
       } catch (err) { fail(err); }
     },
     async () => {
@@ -392,10 +412,24 @@ function onDevFocus() {
   else if (state === 'waiting') clearTimeout(nudgeTimer);
 }
 
+/* ===================== INSTALAR MASCOTE ===================== */
+async function installSkin(paths) {
+  if (state === 'asking') return;
+  const file = paths.find(p => p.toLowerCase().endsWith('.mascote'));
+  if (!file) return fail('Só sei instalar arquivos .mascote.');
+  setState('working', 'Instalando…');
+  try {
+    const name = await invoke('skin_install', { path: file });
+    await loadSkin();
+    setState('done', `Pronto! Agora eu sou ${name}.`);
+    play('done');
+  } catch (err) { fail(err); }
+}
+
 // Resultado de conectar/desconectar pela bandeja (também encerra a pergunta, se aberta)
 function onNotice({ ok, text }) {
-  if (ok) { setState('done', text); chirp(SOUND.done); }
-  else { setState('waiting', text, '', true); chirp(SOUND.waiting); }
+  if (ok) { setState('done', text); play('done'); }
+  else { setState('waiting', text, '', true); play('waiting'); }
 }
 
 const tauri = window.__TAURI__;
@@ -403,6 +437,10 @@ if (tauri) {
   tauri.event.listen('ai-event', e => onEvent(e.payload));
   tauri.event.listen('notice', e => onNotice(e.payload));
   tauri.event.listen('dev-focus', onDevFocus);
+  tauri.event.listen('skin', () => loadSkin().catch(fail)); // trocado pela bandeja
+  tauri.webview.getCurrentWebview().onDragDropEvent(e => {
+    if (e.payload.type === 'drop') installSkin(e.payload.paths);
+  });
   tauri.event.listen('muted', e => setMuted(e.payload));
   invoke('muted_get').then(setMuted).catch(() => {});
   tauri.event.listen('scale', e => setScale(e.payload));
@@ -426,6 +464,7 @@ if (tauri) {
 }
 
 setState('idle');
+loadSkin().catch(err => console.error('Não consegui carregar o mascote:', err));
 </script>
 </body>
 </html>

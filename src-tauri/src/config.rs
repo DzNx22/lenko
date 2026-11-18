@@ -23,6 +23,9 @@ pub struct Config {
     /// Pixels de tela por pixel do sprite (ver `SCALES`).
     #[serde(default = "default_scale")]
     pub scale: u8,
+    /// Id do mascote escolhido. `None` = preguiça padrão.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skin: Option<String>,
 }
 
 /// Tamanhos oferecidos na bandeja. Só escalas inteiras, para o pixel art não borrar.
@@ -34,7 +37,7 @@ fn default_scale() -> u8 {
 
 impl Default for Config {
     fn default() -> Self {
-        Config { claude_code: None, muted: false, scale: default_scale() }
+        Config { claude_code: None, muted: false, scale: default_scale(), skin: None }
     }
 }
 
