@@ -1,6 +1,6 @@
 [package]
 name = "lenko"
-version = "0.2.0"
+version = "0.3.0"
 description = "Mascote que avisa quando a IA de código termina"
 edition = "2021"
 
