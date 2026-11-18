@@ -11,7 +11,8 @@
     "hooks:uninstall": "node scripts/install-hooks.js --uninstall",
     "test:working": "node scripts/notify.js working",
     "test:done": "node scripts/notify.js done",
-    "test:waiting": "node scripts/notify.js waiting"
+    "test:waiting": "node scripts/notify.js waiting",
+    "test:aprovacao": "node scripts/simular-aprovacao.js"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

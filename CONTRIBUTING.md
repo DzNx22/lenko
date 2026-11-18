@@ -16,6 +16,7 @@ Com o LENKO aberto, em outro terminal:
 ```bash
 npm run hooks:install    # conecta ao Claude Code (faz backup do settings.json)
 npm run test:done        # ela deve pular e dizer "Terminei!"
+npm run test:aprovacao   # simula um pedido de aprovação; Enter "aprova"
 ```
 
 Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
