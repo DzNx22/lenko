@@ -12,8 +12,9 @@ pub const MARK: &str = "--preguica";
 const BACKUP_SUFFIX: &str = ".bak-preguica";
 
 /// Hook do Claude Code → estado do mascote.
-pub const EVENTS: [(&str, &str); 3] = [
+pub const EVENTS: [(&str, &str); 4] = [
     ("UserPromptSubmit", "working"), // você mandou um prompt → acordou
+    ("PostToolUse", "working"),      // usou uma ferramenta → você aprovou, voltou a trabalhar
     ("Stop", "done"),                // terminou a resposta
     ("Notification", "waiting"),     // pediu permissão / está esperando você
 ];
@@ -22,7 +23,7 @@ pub const EVENTS: [(&str, &str); 3] = [
 pub enum Status {
     /// Nenhuma entrada do LENKO.
     NotConnected,
-    /// As três entradas existem e apontam para este executável.
+    /// Todas as entradas existem e apontam para este executável.
     Connected,
     /// Há entradas do LENKO, mas com outro caminho ou incompletas.
     Outdated,
@@ -238,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn arquivo_inexistente_cria_os_tres_hooks() {
+    fn arquivo_inexistente_cria_todos_os_hooks() {
         let out = v(&merge(None, Some(exe())).unwrap());
         for (event, kind) in EVENTS {
             assert_eq!(out["hooks"][event][0]["hooks"][0]["command"], command_for(exe(), kind));

@@ -42,6 +42,7 @@ POST http://127.0.0.1:7777/event
 | Hook | Estado |
 |---|---|
 | `UserPromptSubmit` | `working` |
+| `PostToolUse` | `working` (tira do `waiting` assim que você aprova) |
 | `Stop` | `done` |
 | `Notification` | `waiting` |
 

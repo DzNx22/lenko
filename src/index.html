@@ -282,6 +282,8 @@ function onEvent(ev) {
   const project = ev.project || '';
   switch (ev.type) {
     case 'working':
+      // Chega a cada ferramenta usada; só redesenha se mudou alguma coisa
+      if (state === 'working' && $('bubble').querySelector('.project')?.textContent === project) break;
       seenDone = false;
       setState('working', '…', project);
       break;

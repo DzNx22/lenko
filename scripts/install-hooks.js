@@ -10,6 +10,7 @@ const NOTIFY = path.resolve(__dirname, 'notify.js').replace(/\\/g, '/');
 const MARK = '--preguica';
 const EVENTS = {
   UserPromptSubmit: 'working', // você mandou um prompt → acordou
+  PostToolUse: 'working',      // usou uma ferramenta → você aprovou, voltou a trabalhar
   Stop: 'done',                // terminou a resposta
   Notification: 'waiting',     // pediu permissão / está esperando você
 };
