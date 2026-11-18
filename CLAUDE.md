@@ -40,14 +40,25 @@ POST http://127.0.0.1:7777/event
 
 `GET /health` responde 200.
 
-### Hooks usados no Claude Code
+### Ferramentas e hooks
 
-| Hook | Estado |
-|---|---|
-| `UserPromptSubmit` | `working` |
-| `PostToolUse` | `working` (tira do `waiting` assim que você aprova) |
-| `Stop` | `done` |
-| `Notification` | `waiting` |
+Cada ferramenta está em `TOOLS` (`src-tauri/src/hooks.rs`): pasta, arquivo, formato e eventos. O comando de todas é `lenko.exe --notify <estado> --tool <id> --preguica`.
+
+| Ferramenta (`--tool`) | Arquivo | working | done | waiting |
+|---|---|---|---|---|
+| Claude Code (`claude-code`) | `~/.claude/settings.json` | `UserPromptSubmit`, `PostToolUse` | `Stop` | `Notification` |
+| Codex (`codex`) | `~/.codex/hooks.json` | `UserPromptSubmit`, `PostToolUse` | `Stop` | `PermissionRequest` |
+| Gemini CLI (`gemini-cli`) | `~/.gemini/settings.json` | `BeforeAgent`, `AfterTool` | `AfterAgent` | `Notification` |
+| Cursor (`cursor`) | `~/.cursor/hooks.json` (formato próprio, `version: 1`) | `beforeSubmitPrompt`, `postToolUse` | `stop` | — |
+
+`PostToolUse` (e equivalentes) tira do `waiting` assim que o dev aprova.
+
+Detalhes que já custaram tempo:
+- **Shell no Windows.** O Claude Code roda hooks no Git Bash: caminho entre aspas funciona. Codex, Gemini CLI e Cursor usam PowerShell (o Codex às vezes cmd), onde um comando que começa com aspas não executa. Para eles o comando usa o nome curto 8.3 com barras normais (`C:/Users/ANALIS~1/...`), testado em cmd, PowerShell 5.1 e bash, com o stdin chegando nos três.
+- **Saída do hook.** Gemini CLI exige JSON no stdout (`{}`); o Cursor espera `{"continue":true}` no `beforeSubmitPrompt`. Claude Code e Codex recebem saída vazia.
+- **Codex** só roda hooks revisados: depois de conectar, o usuário aprova em `/hooks`.
+- **Projeto:** vem do `cwd` do JSON; o Cursor manda `workspace_roots` no lugar.
+- Ao abrir, o app corrige as entradas de qualquer ferramenta com status `Outdated` (caminho velho ou eventos novos), sem recriar as que o usuário removeu.
 
 Limitação conhecida: na extensão nativa do Claude Code para VS Code, o hook `Notification` não dispara (issue anthropics/claude-code#59718). `Stop` funciona em todos os modos.
 
@@ -93,8 +104,10 @@ Princípio: depois desta fase, **personagens novos nunca exigem atualizar o app*
 - [x] Documentar o formato em `docs/criar-mascote.md` para criadores.
 
 ### Fase 3 — Mais ferramentas e atualização
-- [ ] Adaptadores para outras ferramentas de IA de código (usar o mecanismo de hook/notify de cada uma; se não houver, um wrapper que roda o processo e avisa ao sair).
-- [ ] Vários projetos ao mesmo tempo (fila de balões).
+- [x] Adaptadores para outras ferramentas de IA de código (usar o mecanismo de hook/notify de cada uma; se não houver, um wrapper que roda o processo e avisa ao sair).
+  - [x] Codex, Gemini CLI e Cursor, conectados pela bandeja (**Conectar à IA**). Ainda não testados com as ferramentas reais: nenhuma estava instalada na máquina de desenvolvimento.
+  - [ ] Wrapper para ferramentas sem hooks (ex.: `lenko --run aider ...`). Não dá para ser o próprio `lenko.exe` no Windows: o build de release não tem console (`windows_subsystem = "windows"`), então não repassa o terminal ao programa e o cmd não espera ele terminar. Precisa de um executável de console separado.
+- [ ] Vários projetos ao mesmo tempo (fila de balões). Vai sair numa versão própria, depois dos adaptadores.
 - [ ] Cada adaptador novo é lançado como versão nova do app (chega aos usuários pelo updater da Fase 1).
 
 ### Fase 4 — Loja (futuro, fora deste repositório)

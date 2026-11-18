@@ -57,11 +57,24 @@ LENKO é a identidade de um universo de personagens. A preguiça é a primeira e
 2. Instale e abra. A preguiça aparece no canto inferior direito da tela.
 3. No balão "Quer que eu me conecte ao Claude Code?", clique em **Conectar** e reinicie o Claude Code.
 
+Usa Codex, Gemini CLI ou Cursor? Clique com o botão direito no ícone da bandeja → **Conectar à IA** e marque a ferramenta.
+
 Pronto: sem terminal e sem Node. Para desconectar depois, use o menu da bandeja.
 
 > No Windows, enquanto o instalador não tiver assinatura digital, o SmartScreen pode mostrar "O Windows protegeu o computador". Clique em **Mais informações → Executar assim mesmo**.
 
 O LENKO se atualiza sozinho. Quando sai uma versão nova, a preguiça avisa no balão e só instala quando você clica em **Atualizar**. Também dá para procurar na hora pelo menu da bandeja.
+
+## Ferramentas suportadas
+
+| Ferramenta | Trabalhando | Terminei | Preciso de você | Depois de conectar |
+|---|:-:|:-:|:-:|---|
+| Claude Code | ✓ | ✓ | ✓ | Reinicie o Claude Code. |
+| Codex | ✓ | ✓ | ✓ | Aprove os hooks novos com `/hooks`. |
+| Gemini CLI | ✓ | ✓ | ✓ | Reinicie o Gemini CLI. |
+| Cursor | ✓ | ✓ | — | Nada: o Cursor recarrega sozinho. |
+
+O Cursor não tem um hook para "pediu aprovação", então a preguiça não chama você nesse caso.
 
 ## Como funciona
 
@@ -109,7 +122,7 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 | **Ocultar / Mostrar** | Esconde a preguiça sem fechar o app. Como ela não aparece na barra de tarefas, é por aqui que ela volta. |
 | **Silenciar sons** | Liga ou desliga os sons 8-bit. Fica sincronizado com o botão ♪ e é lembrado ao reabrir. |
 | **Tamanho** | Pequeno, Médio ou Grande. Só escalas inteiras, para o pixel art continuar nítido. O canto inferior direito fica no lugar. |
-| **Conectar / Desconectar do Claude Code** | Adiciona ou remove os hooks do LENKO no `~/.claude/settings.json`, sem mexer nos hooks de outras ferramentas. Reinicie o Claude Code depois. |
+| **Conectar à IA** | Marca ou desmarca cada ferramenta (Claude Code, Codex, Gemini CLI, Cursor). Adiciona ou remove só os hooks do LENKO no arquivo de configuração dela, com backup, sem mexer em hooks de terceiros. Ferramentas não encontradas no computador aparecem desabilitadas. |
 | **Iniciar com o sistema** | Abre o LENKO junto com o computador. Vem desligado. |
 | **Procurar atualizações** | Verifica na hora se há versão nova. A verificação automática já acontece ao abrir e a cada 6 horas. |
 | **Sair** | Fecha o LENKO. |
@@ -120,7 +133,8 @@ Na bandeja do sistema, o ícone do LENKO fica perto do relógio, na barra de tar
 - **Integração pela IA, não pela IDE.** Um único contrato HTTP desacopla o mascote das ferramentas. Suportar uma nova IA é escrever um adaptador de poucas linhas, sem tocar no app.
 - **Adaptador que nunca trava a IA.** Se o app estiver fechado, o adaptador desiste em menos de um segundo e sai com sucesso. O mascote é opcional; o fluxo de trabalho não pode depender dele.
 - **Instalação reversível.** O instalador de hooks marca as próprias entradas, preserva configurações de terceiros e faz backup antes de alterar qualquer arquivo.
-- **Sprite como dados.** A pixel art é desenhada como uma grade de caracteres no código. Mudar uma expressão é editar uma linha.
+- **Sprite como dados.** A pixel art da preguiça é desenhada como uma grade de caracteres num script que gera a spritesheet. Mudar uma expressão é editar uma linha.
+- **Um comando que roda em qualquer shell.** No Windows, cada ferramenta de IA executa o hook num shell diferente (Git Bash, PowerShell ou cmd), e um caminho com espaços entre aspas não roda no PowerShell. Para as ferramentas que usam PowerShell ou cmd, o LENKO registra o nome curto do executável (`C:/Users/FULANO~1/...`), que não tem espaços e funciona nos três.
 
 ## Limitação conhecida
 
@@ -134,7 +148,7 @@ Na extensão nativa do Claude Code para VS Code, o aviso de "Preciso de você" n
 - [x] Ícone na bandeja: ocultar, silenciar, tamanho, conectar/desconectar, iniciar com o sistema e sair
 - [x] Opção de iniciar com o sistema
 - [x] **Instalador de um clique:** baixar, instalar e clicar em "Conectar", sem terminal
-- [ ] Adaptadores para outras ferramentas de IA de código
+- [x] Adaptadores para Codex, Gemini CLI e Cursor
 
 ## LENKO Pro
 
