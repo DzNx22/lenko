@@ -5,6 +5,7 @@ mod config;
 mod focus;
 mod hooks;
 mod notify;
+mod skin;
 mod tray;
 mod update;
 

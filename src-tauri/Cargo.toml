@@ -14,6 +14,9 @@ serde_json = { version = "1", features = ["preserve_order"] }
 tiny_http = "0.12"
 tauri-plugin-autostart = "2"
 tauri-plugin-updater = "2"
+# Pacotes .mascote (zip) e envio das imagens para o webview
+zip = { version = "9", default-features = false, features = ["deflate"] }
+base64 = "0.23"
 
 # Janela em primeiro plano: percebe quando o dev volta para o terminal (focus.rs)
 [target.'cfg(windows)'.dependencies]
