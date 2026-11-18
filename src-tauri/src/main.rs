@@ -52,7 +52,6 @@ fn main() {
             claude_should_ask,
             claude_connect,
             claude_decline,
-            claude_disconnect,
             muted_get,
             muted_set,
             scale_get,
@@ -70,7 +69,7 @@ fn main() {
                 let _ = win.set_size(window_size(cfg.scale(), content));
                 position_bottom_right(&win);
             }
-            repair_claude_hooks(app.handle());
+            repair_hooks(app.handle());
             tray::build(app.handle())?;
             update::start(app.handle());
             focus::start(app.handle());
@@ -83,16 +82,19 @@ fn main() {
 }
 
 // ---------------------------------------------------------------------------
-// Conexão com o Claude Code
+// Conexão com as ferramentas de IA (Claude Code, Codex, Gemini CLI, Cursor)
 // ---------------------------------------------------------------------------
 
 fn config_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_config_dir().map_err(|e| e.to_string())
 }
 
-fn claude_settings(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let home = app.path().home_dir().map_err(|e| e.to_string())?;
-    Ok(hooks::settings_path(&home))
+fn home_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    app.path().home_dir().map_err(|e| e.to_string())
+}
+
+fn tool_settings(app: &tauri::AppHandle, tool: &hooks::Tool) -> Result<PathBuf, String> {
+    Ok(hooks::settings_path(tool, &home_dir(app)?))
 }
 
 fn current_exe() -> Result<PathBuf, String> {
@@ -106,20 +108,48 @@ fn remember(app: &tauri::AppHandle, answer: config::ClaudeCode) -> Result<(), St
     config::save(&dir, &cfg).map_err(|e| e.to_string())
 }
 
-/// Se o usuário já conectou e o executável mudou de lugar (reinstalação ou
-/// atualização), aponta os hooks para o caminho novo sem perguntar de novo.
-/// Se as entradas foram removidas à mão, respeita e não recria.
-fn repair_claude_hooks(app: &tauri::AppHandle) {
-    let Ok(dir) = config_dir(app) else { return };
-    if config::load(&dir).claude_code != Some(config::ClaudeCode::Connected) {
-        return;
-    }
-    let (Ok(settings), Ok(exe)) = (claude_settings(app), current_exe()) else { return };
-    if hooks::read_status(&settings, &exe) == Ok(hooks::Status::Outdated) {
-        if let Err(e) = hooks::connect(&settings, &exe) {
-            eprintln!("Não consegui corrigir os hooks do Claude Code: {e}");
+/// Se o executável mudou de lugar (reinstalação) ou uma versão nova usa hooks
+/// diferentes, aponta as entradas do LENKO para o certo sem perguntar de novo.
+/// Só mexe onde já há entradas nossas: se foram removidas à mão, respeita.
+fn repair_hooks(app: &tauri::AppHandle) {
+    let Ok(exe) = current_exe() else { return };
+    for tool in hooks::TOOLS {
+        let Ok(settings) = tool_settings(app, tool) else { return };
+        if hooks::read_status(tool, &settings, &exe) == Ok(hooks::Status::Outdated) {
+            if let Err(e) = hooks::connect(tool, &settings, &exe) {
+                eprintln!("Não consegui corrigir os hooks do {}: {e}", tool.name);
+            }
         }
     }
+}
+
+/// Conectado = há entradas do LENKO, mesmo que com caminho antigo.
+fn tool_connected(app: &tauri::AppHandle, tool: &hooks::Tool) -> bool {
+    let (Ok(settings), Ok(exe)) = (tool_settings(app, tool), current_exe()) else { return false };
+    matches!(
+        hooks::read_status(tool, &settings, &exe),
+        Ok(hooks::Status::Connected | hooks::Status::Outdated)
+    )
+}
+
+fn tool_connect(app: &tauri::AppHandle, tool: &hooks::Tool) -> Result<(), String> {
+    let result = hooks::connect(tool, &tool_settings(app, tool)?, &current_exe()?).map_err(|e| e.to_string());
+    tray::refresh_tools(app);
+    result?;
+    if tool.id == hooks::CLAUDE.id {
+        remember(app, config::ClaudeCode::Connected)?;
+    }
+    Ok(())
+}
+
+fn tool_disconnect(app: &tauri::AppHandle, tool: &hooks::Tool) -> Result<(), String> {
+    let result = hooks::disconnect(tool, &tool_settings(app, tool)?).map_err(|e| e.to_string());
+    tray::refresh_tools(app);
+    result?;
+    if tool.id == hooks::CLAUDE.id {
+        remember(app, config::ClaudeCode::Declined)?;
+    }
+    Ok(())
 }
 
 /// O balão "Quer que eu me conecte ao Claude Code?" só aparece se ainda não perguntou.
@@ -130,23 +160,11 @@ fn claude_should_ask(app: tauri::AppHandle) -> bool {
 
 #[tauri::command]
 fn claude_connect(app: tauri::AppHandle) -> Result<(), String> {
-    let result = hooks::connect(&claude_settings(&app)?, &current_exe()?).map_err(|e| e.to_string());
-    tray::refresh_claude(&app);
-    result?;
-    remember(&app, config::ClaudeCode::Connected)
+    tool_connect(&app, &hooks::CLAUDE)
 }
 
 #[tauri::command]
 fn claude_decline(app: tauri::AppHandle) -> Result<(), String> {
-    remember(&app, config::ClaudeCode::Declined)
-}
-
-/// Remove só as entradas do LENKO (item da bandeja).
-#[tauri::command]
-fn claude_disconnect(app: tauri::AppHandle) -> Result<(), String> {
-    let result = hooks::disconnect(&claude_settings(&app)?).map_err(|e| e.to_string());
-    tray::refresh_claude(&app);
-    result?;
     remember(&app, config::ClaudeCode::Declined)
 }
 

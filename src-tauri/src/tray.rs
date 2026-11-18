@@ -1,4 +1,4 @@
-//! Ícone na bandeja do sistema: mostrar/ocultar, silenciar, mascote, conectar/desconectar, sair.
+//! Ícone na bandeja do sistema: mostrar/ocultar, silenciar, mascote, ferramentas de IA, sair.
 //!
 //! Como a janela não aparece na barra de tarefas, a bandeja é o único jeito de
 //! trazer a preguiça de volta depois de ocultá-la.
@@ -15,7 +15,7 @@ use crate::{config, hooks, skin, update};
 struct Items {
     toggle: MenuItem<Wry>,
     mute: CheckMenuItem<Wry>,
-    claude: MenuItem<Wry>,
+    tools: Vec<(&'static hooks::Tool, CheckMenuItem<Wry>)>,
     sizes: Vec<(u8, CheckMenuItem<Wry>)>,
     skins: Submenu<Wry>,
     autostart: CheckMenuItem<Wry>,
@@ -43,10 +43,21 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let size_menu = Submenu::with_items(app, "Tamanho", true, &size_refs)?;
     let skins = Submenu::new(app, "Mascote", true)?;
     fill_skins(app, &skins)?;
+    let tools = hooks::TOOLS
+        .into_iter()
+        .map(|tool| {
+            let (enabled, checked, label) = tool_state(app, tool);
+            CheckMenuItem::with_id(app, format!("tool-{}", tool.id), label, enabled, checked, None::<&str>)
+                .map(|item| (tool, item))
+        })
+        .collect::<tauri::Result<Vec<_>>>()?;
+    let tool_refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
+        tools.iter().map(|(_, item)| item as &dyn tauri::menu::IsMenuItem<Wry>).collect();
+    let tools_menu = Submenu::with_items(app, "Conectar à IA", true, &tool_refs)?;
     let items = Items {
         toggle: MenuItem::with_id(app, "toggle", "Ocultar", true, None::<&str>)?,
         mute: CheckMenuItem::with_id(app, "mute", "Silenciar sons", true, muted, None::<&str>)?,
-        claude: MenuItem::with_id(app, "claude", claude_label(app), true, None::<&str>)?,
+        tools,
         sizes,
         skins,
         autostart: CheckMenuItem::with_id(
@@ -66,7 +77,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             &items.mute,
             &size_menu,
             &items.skins,
-            &items.claude,
+            &tools_menu,
             &items.autostart,
             &MenuItem::with_id(app, "update", "Procurar atualizações", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
@@ -109,13 +120,17 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
             let _ = crate::save_muted(app, muted);
             let _ = app.emit("muted", muted);
         }
-        "claude" => toggle_claude(app),
         "autostart" => toggle_autostart(app),
         "update" => check_update(app),
         "quit" => app.exit(0),
         "skin-remove" => {
             if let Err(text) = crate::remove_skin(app) {
                 let _ = app.emit("notice", Notice { ok: false, text });
+            }
+        }
+        id if id.starts_with("tool-") => {
+            if let Some(tool) = hooks::find(&id["tool-".len()..]) {
+                toggle_tool(app, tool);
             }
         }
         id if id.starts_with("skin-") => {
@@ -145,15 +160,14 @@ fn toggle_window(app: &AppHandle) {
     }
 }
 
-fn toggle_claude(app: &AppHandle) {
-    let connected = claude_connected(app);
-    let result = if connected {
-        crate::claude_disconnect(app.clone()).map(|_| "Desconectei do Claude Code.")
+fn toggle_tool(app: &AppHandle, tool: &'static hooks::Tool) {
+    let result = if crate::tool_connected(app, tool) {
+        crate::tool_disconnect(app, tool).map(|_| format!("Desconectei do {}.", tool.name))
     } else {
-        crate::claude_connect(app.clone()).map(|_| "Conectado! Reinicie o Claude Code para valer.")
+        crate::tool_connect(app, tool).map(|_| tool.connected_text.to_string())
     };
     let notice = match result {
-        Ok(text) => Notice { ok: true, text: text.into() },
+        Ok(text) => Notice { ok: true, text },
         Err(text) => Notice { ok: false, text },
     };
     let _ = app.emit("notice", notice);
@@ -186,29 +200,24 @@ fn toggle_autostart(app: &AppHandle) {
     }
 }
 
-/// Conectado = há entradas do LENKO no settings.json, mesmo que com caminho antigo.
-fn claude_connected(app: &AppHandle) -> bool {
-    let (Ok(settings), Ok(exe)) = (crate::claude_settings(app), crate::current_exe()) else {
-        return false;
-    };
-    matches!(
-        hooks::read_status(&settings, &exe),
-        Ok(hooks::Status::Connected | hooks::Status::Outdated)
-    )
+/// (habilitado, marcado, texto) do item de uma ferramenta. Ferramenta não encontrada
+/// e não conectada fica desabilitada, para não criar pastas de programas que não existem.
+fn tool_state(app: &AppHandle, tool: &hooks::Tool) -> (bool, bool, String) {
+    let connected = crate::tool_connected(app, tool);
+    let found = crate::home_dir(app).is_ok_and(|home| hooks::detected(tool, &home));
+    let label = if connected || found { tool.name.to_string() } else { format!("{} (não encontrado)", tool.name) };
+    (connected || found, connected, label)
 }
 
-fn claude_label(app: &AppHandle) -> &'static str {
-    if claude_connected(app) {
-        "Desconectar do Claude Code"
-    } else {
-        "Conectar ao Claude Code"
-    }
-}
-
-/// Atualiza o texto do item depois de conectar ou desconectar por qualquer caminho.
-pub fn refresh_claude(app: &AppHandle) {
+/// Atualiza as marcações depois de conectar ou desconectar por qualquer caminho.
+pub fn refresh_tools(app: &AppHandle) {
     if let Some(items) = app.try_state::<Items>() {
-        let _ = items.claude.set_text(claude_label(app));
+        for (tool, item) in &items.tools {
+            let (enabled, checked, label) = tool_state(app, tool);
+            let _ = item.set_enabled(enabled);
+            let _ = item.set_checked(checked);
+            let _ = item.set_text(label);
+        }
     }
 }
 
