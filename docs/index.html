@@ -3,9 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LENKO — baixar</title>
+<title>LENKO — mascote 8-bit para a sua IA de código</title>
 <meta name="description" content="Um companheiro 8-bit que avisa quando a sua IA de código terminou o trabalho. Baixe para Windows, macOS ou Linux.">
 <link rel="icon" href="favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="LENKO — mascote 8-bit para a sua IA de código">
+<meta property="og:description" content="Uma preguiça no canto da tela que avisa quando o Claude Code, Codex, Gemini CLI ou Cursor terminam ou precisam de você. Grátis para Windows, macOS e Linux.">
+<meta property="og:image" content="https://dznx22.github.io/lenko/estados.png">
+<meta property="og:url" content="https://dznx22.github.io/lenko/">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --sky: #9DB4C0;
@@ -92,6 +98,12 @@
   .note[hidden] { display: none; }
   code { font-family: inherit; background: #F2E6C9; padding: 0 4px; }
 
+  .works { margin-top: 10px; font-size: 13px; font-weight: 400; color: var(--muted); }
+  .states { display: block; width: 100%; margin: 0 auto 20px; image-rendering: pixelated; }
+  .perks { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .perks li { font-weight: 400; font-size: 14px; }
+  .perks b { display: block; font-size: 15px; }
+
   footer { margin-top: 40px; text-align: center; font-size: 13px; font-weight: 400; color: var(--ink); }
   footer p + p { margin-top: 6px; }
 
@@ -111,6 +123,7 @@
   <header>
     <h1>LENKO<span class="cyr">ЛЕНКО</span></h1>
     <p class="tagline">Um companheiro 8-bit que avisa quando a sua IA de código terminou o trabalho.</p>
+    <p class="works">Funciona com Claude Code · Codex · Gemini CLI · Cursor — em qualquer IDE ou terminal</p>
   </header>
 
   <img class="demo" src="demo.gif" width="620" height="320"
@@ -130,6 +143,17 @@
   </div>
 
   <section class="box">
+    <h2>Pare de vigiar o terminal</h2>
+    <img class="states" src="estados.png" alt="Os quatro estados da preguiça: dormindo, trabalhando, terminei e preciso de você">
+    <ul class="perks">
+      <li><b>🎉 Terminei!</b>Ela pula e toca um som 8-bit quando a IA conclui a tarefa, com o nome do projeto.</li>
+      <li><b>✋ Preciso de você</b>Treme e abre um balão vermelho quando a IA para esperando a sua aprovação.</li>
+      <li><b>🔒 Tudo local</b>Sem conta e sem coleta de dados. Não lê o seu código, só recebe o aviso da IA.</li>
+      <li><b>🪶 Leve</b>Instalador de poucos megabytes, pouca memória, e atualização com um clique.</li>
+    </ul>
+  </section>
+
+  <section class="box">
     <h2>Como instalar</h2>
     <ol>
       <li><b>Baixe</b> o instalador do seu sistema.</li>
@@ -138,7 +162,7 @@
         <p class="note" data-os="mac">macOS: se o sistema bloquear a abertura, vá em <b>Ajustes do Sistema → Privacidade e Segurança</b> e clique em <b>Abrir Mesmo Assim</b>.</p>
         <p class="note" data-os="linux">Linux: o <code>.AppImage</code> roda em qualquer distribuição. Dê permissão de execução com <code>chmod +x LENKO_*.AppImage</code> e abra.</p>
       </li>
-      <li><b>Conecte.</b> No balão “Quer que eu me conecte ao Claude Code?”, clique em <b>Conectar</b> e reinicie o Claude Code.</li>
+      <li><b>Conecte.</b> No balão “Quer que eu me conecte ao Claude Code?”, clique em <b>Conectar</b> e reinicie o Claude Code. Para Codex, Gemini CLI ou Cursor, use o ícone da bandeja → <b>Conectar à IA</b>.</li>
     </ol>
     <p class="note">O LENKO se atualiza sozinho: quando sai uma versão nova, a preguiça avisa no balão e só instala quando você clica em <b>Atualizar</b>.</p>
   </section>
