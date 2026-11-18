@@ -1,0 +1,38 @@
+{
+  "formatVersion": 1,
+  "id": "preguica",
+  "name": "Preguiça",
+  "author": "Denzell",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Pendurada no galho, acorda quando a IA precisa de você. O mascote padrão do LENKO.",
+  "frame": {
+    "width": 32,
+    "height": 23
+  },
+  "states": {
+    "idle": {
+      "frames": [
+        1
+      ]
+    },
+    "working": {
+      "frames": [
+        0
+      ],
+      "blink": 1
+    },
+    "done": {
+      "frames": [
+        2
+      ],
+      "blink": 3
+    },
+    "waiting": {
+      "frames": [
+        4
+      ],
+      "blink": 5
+    }
+  }
+}
