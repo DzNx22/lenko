@@ -21,7 +21,7 @@ npm run test:aprovacao   # simula um pedido de aprovação; Enter "aprova"
 
 Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
 
-> Para mexer só no visual, abra `src/index.html` no navegador e use as teclas **1–4** para simular os estados, **5** para a pergunta de conexão e **6** para o aviso de atualização.
+> Para mexer só no visual, abra `src/index.html` no navegador e use as teclas **1–4** para simular os estados, **5** para a pergunta de conexão, **6** para o aviso de atualização e **7** para simular a volta ao terminal.
 
 ## Testes
 

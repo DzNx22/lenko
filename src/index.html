@@ -385,6 +385,13 @@ $('mute').addEventListener('click', () => {
   invoke('muted_set', { muted }).catch(() => {});
 });
 
+// Voltou para o terminal/editor: já viu que terminou, então dispensa;
+// se é um pedido de aprovação, mantém o balão mas para de insistir.
+function onDevFocus() {
+  if (state === 'done') dismiss();
+  else if (state === 'waiting') clearTimeout(nudgeTimer);
+}
+
 // Resultado de conectar/desconectar pela bandeja (também encerra a pergunta, se aberta)
 function onNotice({ ok, text }) {
   if (ok) { setState('done', text); chirp(SOUND.done); }
@@ -395,6 +402,7 @@ const tauri = window.__TAURI__;
 if (tauri) {
   tauri.event.listen('ai-event', e => onEvent(e.payload));
   tauri.event.listen('notice', e => onNotice(e.payload));
+  tauri.event.listen('dev-focus', onDevFocus);
   tauri.event.listen('muted', e => setMuted(e.payload));
   invoke('muted_get').then(setMuted).catch(() => {});
   tauri.event.listen('scale', e => setScale(e.payload));
@@ -413,6 +421,7 @@ if (tauri) {
     '4': () => onEvent({ type: 'waiting', project: 'meu-projeto', message: 'Posso rodar npm install?' }),
     '5': () => askToConnect(),
     '6': () => offerUpdate('9.9.9'),
+    '7': () => onDevFocus(), // simula voltar para o terminal
   })[e.key]?.());
 }
 

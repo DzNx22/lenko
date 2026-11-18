@@ -25,6 +25,7 @@ Ferramenta de IA ──hook──► adaptador ──POST /event──► app Ta
 
 - `src-tauri/src/main.rs` — janela transparente, sem borda, sempre no topo, posicionada no canto inferior direito. Sobe um servidor HTTP (`tiny_http`) em `127.0.0.1:7777` e repassa cada evento para o webview como `ai-event`.
 - `src/index.html` — o mascote inteiro: sprite desenhado como grade de caracteres (`PAL`, `BRANCH`, `body()`), estados, balão de fala, som 8-bit via Web Audio. Aberto direto no navegador, as teclas 1–4 simulam os estados.
+- `src-tauri/src/focus.rs` — no Windows, percebe quando o dev volta para um terminal/editor (janela em primeiro plano) e emite `dev-focus`: a preguiça dispensa o "Terminei!" e para de insistir no pedido de aprovação.
 - `scripts/notify.js` — adaptador genérico: lê o JSON do hook pelo stdin, extrai o nome do projeto do `cwd` e faz o POST. Nunca falha (se o app estiver fechado, sai com código 0 para não travar a IA).
 - `scripts/install-hooks.js` — adiciona/remove os hooks em `~/.claude/settings.json`. Marca as entradas com `--preguica`, preserva hooks de terceiros, faz backup em `settings.json.bak-preguica`.
 

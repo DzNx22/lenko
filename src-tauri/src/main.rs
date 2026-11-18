@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
+mod focus;
 mod hooks;
 mod notify;
 mod tray;
@@ -64,6 +65,7 @@ fn main() {
             repair_claude_hooks(app.handle());
             tray::build(app.handle())?;
             update::start(app.handle());
+            focus::start(app.handle());
             let handle = app.handle().clone();
             thread::spawn(move || run_server(handle));
             Ok(())

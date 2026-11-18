@@ -14,3 +14,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 tiny_http = "0.12"
 tauri-plugin-autostart = "2"
 tauri-plugin-updater = "2"
+
+# Janela em primeiro plano: percebe quando o dev volta para o terminal (focus.rs)
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
