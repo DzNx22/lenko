@@ -10,7 +10,7 @@ O LENKO vive no canto da tela, e o mascote padrão é uma preguiça. Pare de fic
 
 ### [⬇ Baixar o LENKO](https://dznx22.github.io/lenko/)
 
-Windows · macOS · Linux — grátis, sem conta, poucos megabytes
+Windows · macOS · Linux - grátis, sem conta, poucos megabytes
 
 ![A preguiça, mascote padrão do LENKO, reagindo a uma sessão no terminal](docs/demo.gif)
 
