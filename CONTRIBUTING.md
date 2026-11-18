@@ -29,7 +29,7 @@ Reinicie o Claude Code e pronto. Para desconectar: `npm run hooks:uninstall`.
 
 ```bash
 cd src-tauri
-cargo test               # conexão com o Claude Code e modo --notify
+cargo test               # hooks, modo --notify e validação de mascotes
 ```
 
 ## Estrutura
@@ -39,27 +39,24 @@ lenko/
 ├── src/index.html              mascote: sprite, estados, balão e som
 ├── src-tauri/src/main.rs       janela transparente + servidor local na porta 7777
 ├── src-tauri/src/notify.rs     modo --notify: o próprio executável serve de adaptador
-├── src-tauri/src/hooks.rs      conecta e desconecta o Claude Code
+├── src-tauri/src/hooks.rs      conecta e desconecta cada ferramenta de IA
+├── src-tauri/src/skin.rs       formato .mascote: validação e instalação
+├── src-tauri/src/focus.rs      percebe quando você volta ao terminal (Windows)
 ├── src-tauri/src/tray.rs       ícone e menu na bandeja do sistema
 ├── src-tauri/src/config.rs     preferências salvas (conexão, som, tamanho)
 ├── src-tauri/src/update.rs     atualização automática pelas Releases
 ├── src-tauri/tauri.conf.json   nome, identificador e janela do app
 ├── scripts/notify.js           adaptador genérico (hook → evento)
+├── src/mascotes/preguica/      a preguiça no formato .mascote
 ├── scripts/install-hooks.js    conecta e desconecta o Claude Code
+├── scripts/gerar-preguica.js   desenha a preguiça (pixel art como texto)
 ├── docs/                       página de download (GitHub Pages), GIF e imagem dos estados
-└── .github/workflows/          build dos instaladores a cada versão
+└── .github/workflows/          testes a cada push
 ```
 
-## Lançando uma versão
+## Versões
 
-1. Atualize a versão em `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` e `package.json`.
-2. Faça o commit, crie a tag e envie: `git tag v0.1.1 && git push origin main --tags`.
-3. O workflow `release` gera os instaladores e um rascunho de Release com o `latest.json`.
-4. Na página de Releases, abra o rascunho criado pelo workflow (marcado como **Draft**), edite o título e o texto se quiser e clique em **Publish release**. Só então os apps instalados enxergam a versão nova.
-
-   Não use **Draft a new release**: isso cria uma release vazia na mesma tag, sem os instaladores nem o `latest.json`, e o atualizador para de funcionar.
-
-Os secrets necessários estão descritos no topo de `.github/workflows/release.yml`.
+Os instaladores e as atualizações são publicados pelo mantenedor na [página de Releases](https://github.com/DzNx22/lenko/releases). Cada push e pull request passa pelo workflow `ci`, que roda os testes no Windows e no Linux.
 
 ## Regras
 
